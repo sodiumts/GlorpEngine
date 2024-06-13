@@ -1,0 +1,43 @@
+#pragma once 
+
+#include "glorp_window.hpp"
+#include "glorp_pipeline.hpp"
+#include "glorp_device.hpp"
+#include "glorp_swap_chain.hpp"
+#include "glorp_model.hpp"
+
+#include <memory>
+#include <vector>
+
+namespace Glorp {
+class FirstApp {
+    public:
+        static constexpr int WIDTH = 800;
+        static constexpr int HEIGHT = 600;
+
+        FirstApp();
+        ~FirstApp();
+
+        FirstApp(const FirstApp&) = delete;
+        FirstApp &operator=(const FirstApp &) = delete;
+        
+        void run();
+    private:
+        void loadModels();
+        void createPipelineLayout();
+        void createPipeline();
+        void createCommandBuffers();
+        void drawFrame();
+
+    private:
+        GlorpWindow m_glorpWindow {WIDTH, HEIGHT, "First App!"};
+        GlorpDevice m_glorpDevice {m_glorpWindow};
+        GlorpSwapChain m_glorpSwapChain {m_glorpDevice, m_glorpWindow.getExtent()};
+
+        std::unique_ptr<GlorpPipeline> m_glorpPipeline;
+        VkPipelineLayout m_pipelineLayout;
+        std::vector<VkCommandBuffer> m_commandBuffers;
+        std::unique_ptr<GlorpModel> m_glorpModel;
+};
+
+}
