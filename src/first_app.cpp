@@ -53,8 +53,8 @@ void FirstApp::createPipeline() {
     pipelineConfig.pipelineLayout = m_pipelineLayout;
     m_glorpPipeline = std::make_unique<GlorpPipeline>(
         m_glorpDevice,
-        "shaders/simple_shader.vert.spv",
-        "shaders/simple_shader.frag.spv",
+        std::string(SHADERS_DIR) + "/simple_shader.vert.spv",
+        std::string(SHADERS_DIR) + "/simple_shader.frag.spv",
         pipelineConfig
     );
 }
