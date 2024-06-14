@@ -35,7 +35,7 @@ class GlorpDevice {
 
   // Not copyable or movable
   GlorpDevice(const GlorpDevice &) = delete;
-  void operator=(const GlorpDevice &) = delete;
+  GlorpDevice &operator=(const GlorpDevice &) = delete;
   GlorpDevice(GlorpDevice &&) = delete;
   GlorpDevice &operator=(GlorpDevice &&) = delete;
 

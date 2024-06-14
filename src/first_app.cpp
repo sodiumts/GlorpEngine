@@ -7,7 +7,7 @@ namespace Glorp {
 FirstApp::FirstApp() {
     loadModels();
     createPipelineLayout();
-    createPipeline();
+    recreateSwapChain();
     createCommandBuffers();
 }
 FirstApp::~FirstApp() {
@@ -27,9 +27,9 @@ void FirstApp::run() {
 
 void FirstApp::loadModels() {
     std::vector<GlorpModel::Vertex> vertices {
-        {{0.0f, -0.5f}},
-        {{0.5f, 0.5f}},
-        {{-0.5f, 0.5f}}
+        {{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+        {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
+        {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
     };
 
     m_glorpModel = std::make_unique<GlorpModel>(m_glorpDevice, vertices);
@@ -48,8 +48,14 @@ void FirstApp::loadModels() {
  }
 
 void FirstApp::createPipeline() {
-    auto pipelineConfig = GlorpPipeline::defaultPipelineConfigInfo(m_glorpSwapChain.width(), m_glorpSwapChain.height());
-    pipelineConfig.renderPass = m_glorpSwapChain.getRenderPass();
+    assert(m_glorpSwapChain != nullptr && "Cannot create pipeline before swap chain");
+    assert(m_pipelineLayout != nullptr && "Cannot create pipeline before pipeline layout");
+    
+    PipelineConfigInfo pipelineConfig{};
+
+    GlorpPipeline::defaultPipelineConfigInfo(pipelineConfig);
+
+    pipelineConfig.renderPass = m_glorpSwapChain->getRenderPass();
     pipelineConfig.pipelineLayout = m_pipelineLayout;
     m_glorpPipeline = std::make_unique<GlorpPipeline>(
         m_glorpDevice,
@@ -58,9 +64,29 @@ void FirstApp::createPipeline() {
         pipelineConfig
     );
 }
+void FirstApp::recreateSwapChain() {
+    auto extent = m_glorpWindow.getExtent();
+    while(extent.width == 0 || extent.height == 0) {
+        extent = m_glorpWindow.getExtent();
+        glfwWaitEvents();
+    }
+
+    vkDeviceWaitIdle(m_glorpDevice.device());
+
+    if(m_glorpSwapChain == nullptr) {
+        m_glorpSwapChain = std::make_unique<GlorpSwapChain>(m_glorpDevice, extent);
+    } else {
+        m_glorpSwapChain = std::make_unique<GlorpSwapChain>(m_glorpDevice, extent, std::move(m_glorpSwapChain));
+        if(m_glorpSwapChain->imageCount() != m_commandBuffers.size()) {
+            freeCommandBuffers();
+            createCommandBuffers();
+        }
+    }
+    createPipeline();
+}
 
 void FirstApp::createCommandBuffers() {
-    m_commandBuffers.resize(m_glorpSwapChain.imageCount());
+    m_commandBuffers.resize(m_glorpSwapChain->imageCount());
 
     VkCommandBufferAllocateInfo allocInfo {};
     allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -71,49 +97,76 @@ void FirstApp::createCommandBuffers() {
     if (vkAllocateCommandBuffers(m_glorpDevice.device(), &allocInfo, m_commandBuffers.data()) != VK_SUCCESS) {
         throw std::runtime_error("Could not create allocate command buffers");
     }
+}
+void FirstApp::freeCommandBuffers() {
+    vkFreeCommandBuffers(m_glorpDevice.device(), m_glorpDevice.getCommandPool(), static_cast<uint32_t>(m_commandBuffers.size()), m_commandBuffers.data());
+    m_commandBuffers.clear();
+}
 
-    for (int i = 0; i < m_commandBuffers.size(); i++) {
-        VkCommandBufferBeginInfo beginInfo {};
-        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        if (vkBeginCommandBuffer(m_commandBuffers[i], &beginInfo) != VK_SUCCESS) {
-            throw std::runtime_error("Could not begin recording command buffer");
-        }
-        VkRenderPassBeginInfo renderPassInfo {};
-        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        renderPassInfo.renderPass = m_glorpSwapChain.getRenderPass();
-        renderPassInfo.framebuffer = m_glorpSwapChain.getFrameBuffer(i);
 
-        renderPassInfo.renderArea.offset = {0, 0};
-        renderPassInfo.renderArea.extent = m_glorpSwapChain.getSwapChainExtent();
+void FirstApp::recordCommandBuffer(int imageIndex) {
+    VkCommandBufferBeginInfo beginInfo {};
+    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    if (vkBeginCommandBuffer(m_commandBuffers[imageIndex], &beginInfo) != VK_SUCCESS) {
+        throw std::runtime_error("Could not begin recording command buffer");
+    }
+    VkRenderPassBeginInfo renderPassInfo {};
+    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+    renderPassInfo.renderPass = m_glorpSwapChain->getRenderPass();
+    renderPassInfo.framebuffer = m_glorpSwapChain->getFrameBuffer(imageIndex);
 
-        std::array<VkClearValue, 2> clearValues{};
-        clearValues[0].color = {0.1f, 0.1f, 0.1f, 1.0f};
-        clearValues[1].depthStencil = {1.0f, 0};
-        renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
-        renderPassInfo.pClearValues = clearValues.data();
+    renderPassInfo.renderArea.offset = {0, 0};
+    renderPassInfo.renderArea.extent = m_glorpSwapChain->getSwapChainExtent();
 
-        vkCmdBeginRenderPass(m_commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+    std::array<VkClearValue, 2> clearValues{};
+    clearValues[0].color = {0.1f, 0.1f, 0.1f, 1.0f};
+    clearValues[1].depthStencil = {1.0f, 0};
+    renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+    renderPassInfo.pClearValues = clearValues.data();
 
-        m_glorpPipeline->bind(m_commandBuffers[i]);
-        m_glorpModel->bind(m_commandBuffers[i]);
-        m_glorpModel->draw(m_commandBuffers[i]);
+    vkCmdBeginRenderPass(m_commandBuffers[imageIndex], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-        vkCmdEndRenderPass(m_commandBuffers[i]);
-        if (vkEndCommandBuffer(m_commandBuffers[i]) != VK_SUCCESS) {
-            throw std::runtime_error("Failed to record command buffer");
-        }
-    }   
+    VkViewport viewport {};
+    viewport.x = 0.0f;
+    viewport.y = 0.0f;
+    viewport.height = static_cast<float>(m_glorpSwapChain->getSwapChainExtent().height);
+    viewport.width = static_cast<float>(m_glorpSwapChain->getSwapChainExtent().width);
+    viewport.minDepth = 0.0f;
+    viewport.maxDepth = 1.0f;
+    VkRect2D scissor{{0,0}, m_glorpSwapChain->getSwapChainExtent()};
+    vkCmdSetViewport(m_commandBuffers[imageIndex], 0, 1, &viewport);
+    vkCmdSetScissor(m_commandBuffers[imageIndex], 0, 1, &scissor);
 
+
+    m_glorpPipeline->bind(m_commandBuffers[imageIndex]);
+    m_glorpModel->bind(m_commandBuffers[imageIndex]);
+    m_glorpModel->draw(m_commandBuffers[imageIndex]);
+
+    vkCmdEndRenderPass(m_commandBuffers[imageIndex]);
+    if (vkEndCommandBuffer(m_commandBuffers[imageIndex]) != VK_SUCCESS) {
+        throw std::runtime_error("Failed to record command buffer");
+    }
 }
 void FirstApp::drawFrame() {
     uint32_t imageIndex;
-    auto result = m_glorpSwapChain.acquireNextImage(&imageIndex);
+    auto result = m_glorpSwapChain->acquireNextImage(&imageIndex);
+    if (result == VK_ERROR_OUT_OF_DATE_KHR) {
+        recreateSwapChain();
+        return;
+    }
 
     if(result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
         throw std::runtime_error("Failed to acquire next swapchain image");
     }
+    recordCommandBuffer(imageIndex);
+    result = m_glorpSwapChain->submitCommandBuffers(&m_commandBuffers[imageIndex], &imageIndex);
 
-    result = m_glorpSwapChain.submitCommandBuffers(&m_commandBuffers[imageIndex], &imageIndex);
+    if(result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || m_glorpWindow.wasWindowResized()) {
+        m_glorpWindow.resetWindowResizedFlag();
+        recreateSwapChain();
+        return;
+    }
+
     if(result != VK_SUCCESS) {
         throw std::runtime_error("Failed to present swap chain image");
     }

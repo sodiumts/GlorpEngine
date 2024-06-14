@@ -8,8 +8,6 @@
 namespace Glorp {
 
 struct PipelineConfigInfo {
-    VkViewport viewport;
-    VkRect2D scissor;
     VkPipelineViewportStateCreateInfo viewportInfo;
     VkPipelineInputAssemblyStateCreateInfo inputAssemblyInfo;
     VkPipelineRasterizationStateCreateInfo rasterizationInfo;
@@ -17,6 +15,8 @@ struct PipelineConfigInfo {
     VkPipelineColorBlendAttachmentState colorBlendAttachment;
     VkPipelineColorBlendStateCreateInfo colorBlendInfo;
     VkPipelineDepthStencilStateCreateInfo depthStencilInfo;
+    std::vector<VkDynamicState> dynamicStateEnables;
+    VkPipelineDynamicStateCreateInfo dynamicStateInfo;
     VkPipelineLayout pipelineLayout = nullptr;
     VkRenderPass renderPass = nullptr;
     uint32_t subpass = 0;
@@ -28,9 +28,9 @@ class GlorpPipeline {
         ~GlorpPipeline();
 
         GlorpPipeline(const GlorpPipeline&) = delete;
-        void operator=(const GlorpPipeline&) = delete;
+        GlorpPipeline &operator=(const GlorpPipeline&) = delete;
 
-        static PipelineConfigInfo defaultPipelineConfigInfo(uint32_t width, uint32_t height);
+        static void defaultPipelineConfigInfo(PipelineConfigInfo &configInfo);
         void bind(VkCommandBuffer commandBuffer);
 
     private:

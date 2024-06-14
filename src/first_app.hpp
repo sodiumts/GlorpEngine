@@ -9,6 +9,10 @@
 #include <memory>
 #include <vector>
 
+#ifndef SHADERS_DIR
+#define SHADERS_DIR
+#endif 
+
 namespace Glorp {
 class FirstApp {
     public:
@@ -27,12 +31,14 @@ class FirstApp {
         void createPipelineLayout();
         void createPipeline();
         void createCommandBuffers();
+        void freeCommandBuffers();
         void drawFrame();
-
+        void recreateSwapChain();
+        void recordCommandBuffer(int imageIndex);
     private:
         GlorpWindow m_glorpWindow {WIDTH, HEIGHT, "First App!"};
         GlorpDevice m_glorpDevice {m_glorpWindow};
-        GlorpSwapChain m_glorpSwapChain {m_glorpDevice, m_glorpWindow.getExtent()};
+        std::unique_ptr<GlorpSwapChain> m_glorpSwapChain;
 
         std::unique_ptr<GlorpPipeline> m_glorpPipeline;
         VkPipelineLayout m_pipelineLayout;

@@ -8,6 +8,7 @@
 // std lib headers
 #include <string>
 #include <vector>
+#include <memory>
 
 namespace Glorp {
 
@@ -16,10 +17,12 @@ class GlorpSwapChain {
   static constexpr int MAX_FRAMES_IN_FLIGHT = 2;
 
   GlorpSwapChain(GlorpDevice &deviceRef, VkExtent2D windowExtent);
+  GlorpSwapChain(GlorpDevice &deviceRef, VkExtent2D windowExtent, std::shared_ptr<GlorpSwapChain> previous);
+
   ~GlorpSwapChain();
 
   GlorpSwapChain(const GlorpSwapChain &) = delete;
-  void operator=(const GlorpSwapChain &) = delete;
+  GlorpSwapChain &operator=(const GlorpSwapChain &) = delete;
 
   VkFramebuffer getFrameBuffer(int index) { return m_swapChainFramebuffers[index]; }
   VkRenderPass getRenderPass() { return m_renderPass; }
@@ -45,6 +48,7 @@ class GlorpSwapChain {
   void createRenderPass();
   void createFramebuffers();
   void createSyncObjects();
+  void init();
 
   // Helper functions
   VkSurfaceFormatKHR chooseSwapSurfaceFormat(
@@ -70,6 +74,7 @@ class GlorpSwapChain {
   VkExtent2D m_windowExtent;
 
   VkSwapchainKHR m_swapChain;
+  std::shared_ptr<GlorpSwapChain> m_oldSwapChain;
 
   std::vector<VkSemaphore> m_imageAvailableSemaphores;
   std::vector<VkSemaphore> m_renderFinishedSemaphores;

@@ -13,6 +13,16 @@ namespace Glorp {
 
 GlorpSwapChain::GlorpSwapChain(GlorpDevice &deviceRef, VkExtent2D extent)
     : m_device{deviceRef}, m_windowExtent{extent} {
+  init();
+}
+GlorpSwapChain::GlorpSwapChain(GlorpDevice &deviceRef, VkExtent2D extent, std::shared_ptr<GlorpSwapChain> previous)
+    : m_device{deviceRef}, m_windowExtent{extent}, m_oldSwapChain{previous} {
+  init();
+
+  m_oldSwapChain = nullptr;
+}
+
+void GlorpSwapChain::init() {
   createSwapChain();
   createImageViews();
   createRenderPass();
@@ -162,7 +172,7 @@ void GlorpSwapChain::createSwapChain() {
   createInfo.presentMode = presentMode;
   createInfo.clipped = VK_TRUE;
 
-  createInfo.oldSwapchain = VK_NULL_HANDLE;
+  createInfo.oldSwapchain = m_oldSwapChain == nullptr ? VK_NULL_HANDLE : m_oldSwapChain->m_swapChain;
 
   if (vkCreateSwapchainKHR(m_device.device(), &createInfo, nullptr, &m_swapChain) != VK_SUCCESS) {
     throw std::runtime_error("failed to create swap chain!");
@@ -362,7 +372,7 @@ void GlorpSwapChain::createSyncObjects() {
 VkSurfaceFormatKHR GlorpSwapChain::chooseSwapSurfaceFormat(
     const std::vector<VkSurfaceFormatKHR> &availableFormats) {
   for (const auto &availableFormat : availableFormats) {
-    if (availableFormat.format == VK_FORMAT_B8G8R8A8_UNORM &&
+    if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB &&
         availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
       return availableFormat;
     }
