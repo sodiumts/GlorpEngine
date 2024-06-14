@@ -15,18 +15,7 @@ namespace Glorp {
         std::ifstream file{filePath, std::ios::ate | std::ios::binary};
         
         if(!file.is_open()) {
-            std::string errorMessage = "Failed to open file " + filePath;
-            
-            // Check if the file exists and is accessible
-            if (!std::filesystem::exists(filePath)) {
-                errorMessage += ": file does not exist.";
-            } else if (!std::filesystem::is_regular_file(filePath)) {
-                errorMessage += ": not a regular file.";
-            } else {
-                errorMessage += ": " + std::string(std::strerror(errno));
-            }
-            std::cerr << "Current working directory: " << std::filesystem::current_path() << std::endl;
-            throw std::runtime_error(errorMessage);
+            throw std::runtime_error("Failed to open file " + filePath);
         }
         size_t fileSize = static_cast<size_t>(file.tellg());
         std::vector<char> buffer(fileSize);
