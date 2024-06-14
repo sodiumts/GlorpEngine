@@ -96,6 +96,10 @@ if (WIN32)
   )
 
   target_link_libraries(${PROJECT_NAME} glfw3 vulkan-1)
+elseif(APPLE)
+    message(SATUS "CREATING BUILD FOR MACOS")
+    target_link_libraries(${PROJECT_NAME} glfw Vulkan::Vulkan)
+    target_compile_definitions(GlorpEngine PRIVATE APPLE)
 elseif (UNIX)
     message(STATUS "CREATING BUILD FOR UNIX")
     target_include_directories(${PROJECT_NAME} PUBLIC
@@ -103,9 +107,6 @@ elseif (UNIX)
       ${TINYOBJ_PATH}
     )
     target_link_libraries(${PROJECT_NAME} glfw ${Vulkan_LIBRARIES})
-elseif(APPLE)
-    message(SATUS "CREATING BUILD FOR MACOS")
-    target_link_libraries(${PROJECT_NAME} glfw Vulkan::Vulkan)
 endif()
 
 set(SHADERS_DIR "${CMAKE_SOURCE_DIR}/shaders")
