@@ -6,16 +6,18 @@
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
+#include <glm/gtc/constants.hpp>
 
 namespace Glorp {
 
 struct SimplePushConstantData {
+    glm::mat2 transform{1.f};
     glm::vec2 offset; 
     alignas(16) glm::vec3 color;
 };
 
 FirstApp::FirstApp() {
-    loadModels();
+    loadGameObjects();
     createPipelineLayout();
     recreateSwapChain();
     createCommandBuffers();
@@ -35,14 +37,23 @@ void FirstApp::run() {
 }
 
 
-void FirstApp::loadModels() {
+void FirstApp::loadGameObjects() {
     std::vector<GlorpModel::Vertex> vertices {
         {{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
         {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
         {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
     };
 
-    m_glorpModel = std::make_unique<GlorpModel>(m_glorpDevice, vertices);
+    auto glorpModel = std::make_shared<GlorpModel>(m_glorpDevice, vertices);
+
+    auto triangle = GlorpGameObject::createGameObject();
+    triangle.model = glorpModel;
+    triangle.color = {.1f, .8f, .1f};
+    triangle.transform2d.translation.x = .2f;
+    triangle.transform2d.scale = {2.f, .5f};
+    triangle.transform2d.rotation = .25f * glm::two_pi<float>();
+
+    m_gameObjects.push_back(std::move(triangle));
 }
 
  void FirstApp::createPipelineLayout() {
@@ -121,10 +132,6 @@ void FirstApp::freeCommandBuffers() {
 
 
 void FirstApp::recordCommandBuffer(int imageIndex) {
-    static int frame = 0;
-    
-    frame = (frame + 1) % 1000;
-
     VkCommandBufferBeginInfo beginInfo {};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     if (vkBeginCommandBuffer(m_commandBuffers[imageIndex], &beginInfo) != VK_SUCCESS) {
@@ -157,18 +164,7 @@ void FirstApp::recordCommandBuffer(int imageIndex) {
     vkCmdSetViewport(m_commandBuffers[imageIndex], 0, 1, &viewport);
     vkCmdSetScissor(m_commandBuffers[imageIndex], 0, 1, &scissor);
 
-
-    m_glorpPipeline->bind(m_commandBuffers[imageIndex]);
-    m_glorpModel->bind(m_commandBuffers[imageIndex]);
-
-    for (int i = 0; i < 4; i++) {
-        SimplePushConstantData push{};
-        push.offset = {-0.5f + frame * 0.002f, -0.4f + i * 0.25f};
-        push.color = {0.0f, 0.0f, 0.2f + 0.2f*i};
-        vkCmdPushConstants(m_commandBuffers[imageIndex], m_pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(SimplePushConstantData), &push);
-        m_glorpModel->draw(m_commandBuffers[imageIndex]);
-    }
-
+    renderGameObjects(m_commandBuffers[imageIndex]);
 
 
     vkCmdEndRenderPass(m_commandBuffers[imageIndex]);
@@ -176,6 +172,23 @@ void FirstApp::recordCommandBuffer(int imageIndex) {
         throw std::runtime_error("Failed to record command buffer");
     }
 }
+
+void FirstApp::renderGameObjects(VkCommandBuffer commandBuffer) {
+    m_glorpPipeline->bind(commandBuffer);
+
+    for(auto &gameObject : m_gameObjects) {
+        gameObject.transform2d.rotation = glm::mod(gameObject.transform2d.rotation + 0.001f, glm::two_pi<float>());
+        SimplePushConstantData push{};
+        push.offset = gameObject.transform2d.translation;
+        push.color = gameObject.color;
+        push.transform = gameObject.transform2d.mat2();
+
+        vkCmdPushConstants(commandBuffer, m_pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(SimplePushConstantData), &push);
+        gameObject.model->bind(commandBuffer);
+        gameObject.model->draw(commandBuffer);
+    }
+}
+
 void FirstApp::drawFrame() {
     uint32_t imageIndex;
     auto result = m_glorpSwapChain->acquireNextImage(&imageIndex);

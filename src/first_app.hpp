@@ -5,6 +5,7 @@
 #include "glorp_device.hpp"
 #include "glorp_swap_chain.hpp"
 #include "glorp_model.hpp"
+#include "glorp_game_object.hpp"
 
 #include <memory>
 #include <vector>
@@ -27,7 +28,7 @@ class FirstApp {
         
         void run();
     private:
-        void loadModels();
+        void loadGameObjects();
         void createPipelineLayout();
         void createPipeline();
         void createCommandBuffers();
@@ -35,6 +36,7 @@ class FirstApp {
         void drawFrame();
         void recreateSwapChain();
         void recordCommandBuffer(int imageIndex);
+        void renderGameObjects(VkCommandBuffer commandBuffer);
     private:
         GlorpWindow m_glorpWindow {WIDTH, HEIGHT, "First App!"};
         GlorpDevice m_glorpDevice {m_glorpWindow};
@@ -43,7 +45,7 @@ class FirstApp {
         std::unique_ptr<GlorpPipeline> m_glorpPipeline;
         VkPipelineLayout m_pipelineLayout;
         std::vector<VkCommandBuffer> m_commandBuffers;
-        std::unique_ptr<GlorpModel> m_glorpModel;
+        std::vector<GlorpGameObject> m_gameObjects;
 };
 
 }
