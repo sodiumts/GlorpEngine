@@ -1,18 +1,13 @@
 #pragma once 
 
 #include "glorp_window.hpp"
-#include "glorp_pipeline.hpp"
 #include "glorp_device.hpp"
-#include "glorp_swap_chain.hpp"
 #include "glorp_model.hpp"
 #include "glorp_game_object.hpp"
+#include "glorp_renderer.hpp"
 
 #include <memory>
 #include <vector>
-
-#ifndef SHADERS_DIR
-#define SHADERS_DIR
-#endif 
 
 namespace Glorp {
 class FirstApp {
@@ -29,22 +24,11 @@ class FirstApp {
         void run();
     private:
         void loadGameObjects();
-        void createPipelineLayout();
-        void createPipeline();
-        void createCommandBuffers();
-        void freeCommandBuffers();
-        void drawFrame();
-        void recreateSwapChain();
-        void recordCommandBuffer(int imageIndex);
-        void renderGameObjects(VkCommandBuffer commandBuffer);
     private:
         GlorpWindow m_glorpWindow {WIDTH, HEIGHT, "First App!"};
         GlorpDevice m_glorpDevice {m_glorpWindow};
-        std::unique_ptr<GlorpSwapChain> m_glorpSwapChain;
+        GlorpRenderer m_glorpRenderer {m_glorpWindow, m_glorpDevice};
 
-        std::unique_ptr<GlorpPipeline> m_glorpPipeline;
-        VkPipelineLayout m_pipelineLayout;
-        std::vector<VkCommandBuffer> m_commandBuffers;
         std::vector<GlorpGameObject> m_gameObjects;
 };
 
