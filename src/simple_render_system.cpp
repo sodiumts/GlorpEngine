@@ -58,16 +58,15 @@ void SimpleRenderSystem::createPipeline(VkRenderPass renderPass) {
         pipelineConfig
     );
 }
-void SimpleRenderSystem::renderGameObjects(VkCommandBuffer commandBuffer, std::vector<GlorpGameObject> &gameObjects) {
+void SimpleRenderSystem::renderGameObjects(VkCommandBuffer commandBuffer, std::vector<GlorpGameObject> &gameObjects, const GlorpCamera& camera) {
     m_glorpPipeline->bind(commandBuffer);
 
-    for(auto &gameObject : gameObjects) {
-        gameObject.transform.rotation.y = glm::mod(gameObject.transform.rotation.y + 0.001f, glm::two_pi<float>());
-        gameObject.transform.rotation.x = glm::mod(gameObject.transform.rotation.x + 0.0005f, glm::two_pi<float>());
+    auto projectionView = camera.getProjection() * camera.getView();
 
+    for(auto &gameObject : gameObjects) {
         SimplePushConstantData push{};
         push.color = gameObject.color;
-        push.transform = gameObject.transform.mat4();
+        push.transform = projectionView * gameObject.transform.mat4();
 
         vkCmdPushConstants(commandBuffer, m_pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(SimplePushConstantData), &push);
         gameObject.model->bind(commandBuffer);

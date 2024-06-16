@@ -19,6 +19,7 @@ class GlorpRenderer {
         GlorpRenderer &operator=(const GlorpRenderer &) = delete;
         
         VkRenderPass getSwapChainRenderPass() const { return m_glorpSwapChain->getRenderPass(); }
+        float getAspectRatio() const { return m_glorpSwapChain->extentAspectRatio(); } 
         bool isFrameInProgress() const { return m_isFrameStarted; }
 
         VkCommandBuffer getCurrentCommandBuffer() const {

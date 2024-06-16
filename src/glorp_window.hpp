@@ -18,6 +18,7 @@ class GlorpWindow {
         VkExtent2D getExtent() { return {static_cast<uint32_t>(m_width), static_cast<uint32_t>(m_height)}; }
         bool wasWindowResized() { return m_frameBufferResized; }
         void resetWindowResizedFlag() { m_frameBufferResized = false; }
+        GLFWwindow* getGLFWwindow() const { return m_window; }
     private:
         void InitWindow();
         static void frameBufferResizeCallback(GLFWwindow *window, int width, int height);
