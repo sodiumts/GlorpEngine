@@ -31,6 +31,7 @@ void FirstApp::run() {
     auto viewerObject = GlorpGameObject::createGameObject();
     KeyboardMovementController cameraController{};
 
+    
     auto currentTime = std::chrono::high_resolution_clock::now();
     while(!m_glorpWindow.shouldClose()) {
         glfwPollEvents();
@@ -41,8 +42,11 @@ void FirstApp::run() {
         cameraController.moveInPlaneXZ(m_glorpWindow.getGLFWwindow(), frameTime, viewerObject);
         camera.setViewYXZ(viewerObject.transform.translation, viewerObject.transform.rotation);
 
+        moveCat(frameTime);
+        
         float aspect = m_glorpRenderer.getAspectRatio();
         camera.setPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 10.f);
+
 
         if (auto commandBuffer = m_glorpRenderer.beginFrame()) {
             m_glorpRenderer.beginSwapChainRenderPass(commandBuffer);
@@ -56,13 +60,36 @@ void FirstApp::run() {
 }
 
 void FirstApp::loadGameObjects() {
-    std::shared_ptr<GlorpModel> glorpModel = GlorpModel::createModelFromFile(m_glorpDevice, std::string(MODELS_DIR) + "/smooth_vase.obj");
+    std::shared_ptr<GlorpModel> catModel = GlorpModel::createModelFromFile(m_glorpDevice, std::string(MODELS_DIR) + "/cat_thing.obj");
 
-    auto gameObject = GlorpGameObject::createGameObject();
+    auto catObject = GlorpGameObject::createGameObject();
 
-    gameObject.model = glorpModel;
-    gameObject.transform.translation = {.0f, .0f, 2.5f};
-    gameObject.transform.scale = {2.5f, 2.5f, 2.5f};
-    m_gameObjects.push_back(std::move(gameObject));
+    catObject.model = catModel;
+    catObject.transform.translation = {.0f, 0.f, 2.5f};
+    catObject.transform.scale = {.5f, .5f, .5f};
+    catObject.transform.rotation = {.5f, .5f, .7f};
+    m_gameObjects.push_back(std::move(catObject));
+
+    std::shared_ptr<GlorpModel> floorModel = GlorpModel::createModelFromFile(m_glorpDevice, std::string(MODELS_DIR) + "/colored_cube.obj");
+
+    auto floorObject = GlorpGameObject::createGameObject();
+
+    floorObject.model = floorModel;
+    floorObject.transform.translation = {.0f, .6f, 2.f};
+    floorObject.transform.scale = {4.f, .001f, 4.f};
+    floorObject.transform.rotation = {.0f, .0f, .0f};
+    floorObject.color = {.6f, .5f, .2f};
+    m_gameObjects.push_back(std::move(floorObject));
+
 }
+
+void FirstApp::moveCat(float dt) {
+    float turnSpeed = 2.f;
+    m_gameObjects[0].transform.rotation.x += turnSpeed * dt;
+    m_gameObjects[0].transform.rotation.y += turnSpeed / 1.2f * dt;
+
+    m_gameObjects[0].transform.rotation.y = glm::mod(m_gameObjects[0].transform.rotation.y, glm::two_pi<float>());
+    m_gameObjects[0].transform.rotation.x = glm::mod(m_gameObjects[0].transform.rotation.x, glm::two_pi<float>());
+}
+
 }

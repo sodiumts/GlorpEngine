@@ -12,7 +12,7 @@ namespace Glorp {
 
 struct SimplePushConstantData {
     glm::mat4 transform{1.f};
-    alignas(16) glm::vec3 color;
+    glm::mat4 normalMatrix{1.f};
 };
 
 SimpleRenderSystem::SimpleRenderSystem(GlorpDevice &device, VkRenderPass renderPass): m_glorpDevice{device} {
@@ -65,8 +65,10 @@ void SimpleRenderSystem::renderGameObjects(VkCommandBuffer commandBuffer, std::v
 
     for(auto &gameObject : gameObjects) {
         SimplePushConstantData push{};
-        push.color = gameObject.color;
-        push.transform = projectionView * gameObject.transform.mat4();
+        auto modelMatrix = gameObject.transform.mat4();
+
+        push.transform = projectionView * modelMatrix;
+        push.normalMatrix = gameObject.transform.normalMatrix();
 
         vkCmdPushConstants(commandBuffer, m_pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(SimplePushConstantData), &push);
         gameObject.model->bind(commandBuffer);
