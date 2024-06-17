@@ -13,6 +13,10 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/constants.hpp>
 
+#ifndef MODELS_DIR
+#define MODELS_DIR
+#endif
+
 namespace Glorp {
 FirstApp::FirstApp() {
     loadGameObjects();
@@ -52,13 +56,13 @@ void FirstApp::run() {
 }
 
 void FirstApp::loadGameObjects() {
-    std::shared_ptr<GlorpModel> glorpModel = GlorpModel::createModelFromFile(m_glorpDevice, "models/smooth_vase.obj");
+    std::shared_ptr<GlorpModel> glorpModel = GlorpModel::createModelFromFile(m_glorpDevice, std::string(MODELS_DIR) + "/smooth_vase.obj");
 
     auto gameObject = GlorpGameObject::createGameObject();
 
     gameObject.model = glorpModel;
     gameObject.transform.translation = {.0f, .0f, 2.5f};
-    gameObject.transform.scale = {.5f, .5f, .5f};
+    gameObject.transform.scale = {2.5f, 2.5f, 2.5f};
     m_gameObjects.push_back(std::move(gameObject));
 }
 }
