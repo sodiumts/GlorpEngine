@@ -5,6 +5,7 @@
 #include <cassert>
 #include <cstring>
 #include <unordered_map>
+#include <memory>
 
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <tiny_obj_loader.h>
@@ -27,49 +28,35 @@ GlorpModel::GlorpModel(GlorpDevice &device,const GlorpModel::Builder &builder) :
     createVertexBuffers(builder.vertices);
     createIndexBuffers(builder.indices);
 }
-GlorpModel::~GlorpModel() {
-    vkDestroyBuffer(m_glorpDevice.device(), m_vertexBuffer, nullptr);
-    vkFreeMemory(m_glorpDevice.device(), m_vertexBufferMemory, nullptr);
-    if(m_hasIndexBuffer) {
-        vkDestroyBuffer(m_glorpDevice.device(), m_indexBuffer, nullptr);
-        vkFreeMemory(m_glorpDevice.device(), m_indexBufferMemory, nullptr);
-    }
-}
+GlorpModel::~GlorpModel() {}
 
 void GlorpModel::createVertexBuffers(const std::vector<Vertex> &vertices) {
     m_vertexCount = static_cast<uint32_t>(vertices.size());
     assert(m_vertexCount >= 3 && "Vertex count must be at least 3");
     VkDeviceSize bufferSize = sizeof(vertices[0]) * m_vertexCount;
 
-    VkBuffer stagingBuffer;
-    VkDeviceMemory stagingBufferMemory;
-    // Create staging buffer
-    m_glorpDevice.createBuffer(
-        bufferSize,
+    uint32_t vertexSize = sizeof(vertices[0]);
+
+    GlorpBuffer stagingBuffer {
+        m_glorpDevice,
+        vertexSize,
+        m_vertexCount,
         VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-        stagingBuffer,
-        stagingBufferMemory
-    );
+    };
 
-    
-    void *data;
-    vkMapMemory(m_glorpDevice.device(), stagingBufferMemory, 0, bufferSize, 0, &data);
-    memcpy(data, vertices.data(), static_cast<size_t>(bufferSize));
-    vkUnmapMemory(m_glorpDevice.device(), stagingBufferMemory);
+    stagingBuffer.map();
+    stagingBuffer.writeToBuffer((void *)vertices.data());
 
-    m_glorpDevice.createBuffer(
-        bufferSize,
+    m_vertexBuffer = std::make_unique<GlorpBuffer>(
+        m_glorpDevice,
+        vertexSize, 
+        m_vertexCount,
         VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-        m_vertexBuffer,
-        m_vertexBufferMemory
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
     );
 
-    m_glorpDevice.copyBuffer(stagingBuffer, m_vertexBuffer, bufferSize);
-
-    vkDestroyBuffer(m_glorpDevice.device(), stagingBuffer, nullptr);
-    vkFreeMemory(m_glorpDevice.device(), stagingBufferMemory, nullptr);
+    m_glorpDevice.copyBuffer(stagingBuffer.getBuffer(), m_vertexBuffer->getBuffer(), bufferSize);
 }
 
 void GlorpModel::createIndexBuffers(const std::vector<uint32_t> &indices) {
@@ -79,47 +66,40 @@ void GlorpModel::createIndexBuffers(const std::vector<uint32_t> &indices) {
     if(!m_hasIndexBuffer) {
         return;
     }
-
+    
     VkDeviceSize bufferSize = sizeof(indices[0]) * m_indexCount;
 
-    VkBuffer stagingBuffer;
-    VkDeviceMemory stagingBufferMemory;
-    // Create staging buffer
-    m_glorpDevice.createBuffer(
-        bufferSize,
+    uint32_t indexSize = sizeof(indices[0]);
+
+    GlorpBuffer stagingBuffer {
+        m_glorpDevice,
+        indexSize,
+        m_indexCount,
         VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-        stagingBuffer,
-        stagingBufferMemory
-    );
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+    };
+    stagingBuffer.map();
+    stagingBuffer.writeToBuffer((void *) indices.data());
 
-    
-    void *data;
-    vkMapMemory(m_glorpDevice.device(), stagingBufferMemory, 0, bufferSize, 0, &data);
-    memcpy(data, indices.data(), static_cast<size_t>(bufferSize));
-    vkUnmapMemory(m_glorpDevice.device(), stagingBufferMemory);
-
-    m_glorpDevice.createBuffer(
-        bufferSize,
+    m_indexBuffer = std::make_unique<GlorpBuffer> (
+        m_glorpDevice,
+        indexSize,
+        m_indexCount,
         VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-        m_indexBuffer,
-        m_indexBufferMemory
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
     );
 
-    m_glorpDevice.copyBuffer(stagingBuffer, m_indexBuffer, bufferSize);
 
-    vkDestroyBuffer(m_glorpDevice.device(), stagingBuffer, nullptr);
-    vkFreeMemory(m_glorpDevice.device(), stagingBufferMemory, nullptr);
+    m_glorpDevice.copyBuffer(stagingBuffer.getBuffer(), m_indexBuffer->getBuffer(), bufferSize);
 }
 
 void GlorpModel::bind(VkCommandBuffer commandBuffer) {
-    VkBuffer buffers[] = {m_vertexBuffer};
+    VkBuffer buffers[] = {m_vertexBuffer->getBuffer()};
     VkDeviceSize offsets[] = {0};
     vkCmdBindVertexBuffers(commandBuffer, 0, 1, buffers, offsets);
     
     if(m_hasIndexBuffer) {
-        vkCmdBindIndexBuffer(commandBuffer, m_indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+        vkCmdBindIndexBuffer(commandBuffer, m_indexBuffer->getBuffer(), 0, VK_INDEX_TYPE_UINT32);
     }
 }
 

@@ -4,6 +4,7 @@
 #include "glorp_device.hpp"
 #include "glorp_game_object.hpp"
 #include "glorp_camera.hpp"
+#include "glorp_frame_info.hpp"
 
 #include <memory>
 #include <vector>
@@ -21,7 +22,7 @@ class SimpleRenderSystem {
         SimpleRenderSystem(const SimpleRenderSystem&) = delete;
         SimpleRenderSystem &operator=(const SimpleRenderSystem &) = delete;
 
-        void renderGameObjects(VkCommandBuffer commandBuffer, std::vector<GlorpGameObject> &gameObjects, const GlorpCamera& camera);
+        void renderGameObjects(FrameInfo &frameInfo, std::vector<GlorpGameObject> &gameObjects);
     private:
         void createPipelineLayout();
         void createPipeline(VkRenderPass renderPass);

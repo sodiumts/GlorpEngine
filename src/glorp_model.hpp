@@ -1,6 +1,7 @@
 #pragma once
 
 #include "glorp_device.hpp"
+#include "glorp_buffer.hpp"
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -51,13 +52,11 @@ class GlorpModel {
     private:
         GlorpDevice& m_glorpDevice;
 
-        VkBuffer m_vertexBuffer;
-        VkDeviceMemory m_vertexBufferMemory;
+        std::unique_ptr<GlorpBuffer> m_vertexBuffer;
         uint32_t m_vertexCount;
 
         bool m_hasIndexBuffer = false;
-        VkBuffer m_indexBuffer;
-        VkDeviceMemory m_indexBufferMemory;
-        uint32_t m_indexCount;
+        std::unique_ptr<GlorpBuffer> m_indexBuffer;
+        uint32_t m_indexCount; 
 };
 }

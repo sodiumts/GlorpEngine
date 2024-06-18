@@ -3,6 +3,7 @@
 #include "simple_render_system.hpp"
 #include "glorp_camera.hpp" 
 #include "keyboard_movement_controller.hpp"
+#include "glorp_buffer.hpp"
 
 #include <stdexcept>
 #include <array>
@@ -18,6 +19,12 @@
 #endif
 
 namespace Glorp {
+
+struct GlobalUbo {
+    glm::mat4 projectionView{1.f};
+    glm::vec3 lightDirection = glm::normalize(glm::vec3{1.f, -3.f, -1.f});
+};
+
 FirstApp::FirstApp() {
     loadGameObjects();
 }
@@ -25,6 +32,18 @@ FirstApp::~FirstApp() {}
 
 
 void FirstApp::run() {
+
+    GlorpBuffer globalUboBuffer {
+        m_glorpDevice,
+        sizeof(GlobalUbo),
+        GlorpSwapChain::MAX_FRAMES_IN_FLIGHT,
+        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
+        m_glorpDevice.properties.limits.minUniformBufferOffsetAlignment
+    };
+
+    globalUboBuffer.map();
+
     SimpleRenderSystem SimpleRenderSystem{m_glorpDevice, m_glorpRenderer.getSwapChainRenderPass()};
     GlorpCamera camera{};
     
@@ -49,8 +68,23 @@ void FirstApp::run() {
 
 
         if (auto commandBuffer = m_glorpRenderer.beginFrame()) {
+            int frameIndex = m_glorpRenderer.getFrameIndex();
+
+            FrameInfo frameInfo {
+                frameIndex,
+                frameTime,
+                commandBuffer,
+                camera
+            };
+            //update
+            GlobalUbo ubo{};
+            ubo.projectionView = camera.getProjection() * camera.getView();
+            globalUboBuffer.writeToIndex(&ubo ,frameIndex);
+            globalUboBuffer.flushIndex(frameIndex);
+
+            // render
             m_glorpRenderer.beginSwapChainRenderPass(commandBuffer);
-            SimpleRenderSystem.renderGameObjects(commandBuffer, m_gameObjects, camera);
+            SimpleRenderSystem.renderGameObjects(frameInfo, m_gameObjects);
             m_glorpRenderer.endSwapChainRenderPass(commandBuffer);
             m_glorpRenderer.endFrame();
         }
