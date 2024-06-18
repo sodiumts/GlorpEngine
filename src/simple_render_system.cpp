@@ -11,12 +11,12 @@
 namespace Glorp {
 
 struct SimplePushConstantData {
-    glm::mat4 transform{1.f};
+    glm::mat4 modelMatrix{1.f};
     glm::mat4 normalMatrix{1.f};
 };
 
-SimpleRenderSystem::SimpleRenderSystem(GlorpDevice &device, VkRenderPass renderPass): m_glorpDevice{device} {
-    createPipelineLayout();
+SimpleRenderSystem::SimpleRenderSystem(GlorpDevice &device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout): m_glorpDevice{device} {
+    createPipelineLayout(globalSetLayout);
     createPipeline(renderPass);
 }
 SimpleRenderSystem::~SimpleRenderSystem() {
@@ -24,17 +24,20 @@ SimpleRenderSystem::~SimpleRenderSystem() {
 }
 
 
-void SimpleRenderSystem::createPipelineLayout() {
+void SimpleRenderSystem::createPipelineLayout(VkDescriptorSetLayout globalSetLayout) {
 
     VkPushConstantRange pushConstantRange {};
     pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
     pushConstantRange.offset = 0;
     pushConstantRange.size = sizeof(SimplePushConstantData);
 
+    std::vector<VkDescriptorSetLayout> descriptorSetLayouts{globalSetLayout};
+
+    
     VkPipelineLayoutCreateInfo pipelineLayoutInfo {};
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    pipelineLayoutInfo.setLayoutCount = 0;
-    pipelineLayoutInfo.pSetLayouts = nullptr;
+    pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(descriptorSetLayouts.size());
+    pipelineLayoutInfo.pSetLayouts = descriptorSetLayouts.data();
     pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
     pipelineLayoutInfo.pushConstantRangeCount = 1;
     if(vkCreatePipelineLayout(m_glorpDevice.device(), &pipelineLayoutInfo, nullptr, &m_pipelineLayout) != VK_SUCCESS) {
@@ -61,13 +64,19 @@ void SimpleRenderSystem::createPipeline(VkRenderPass renderPass) {
 void SimpleRenderSystem::renderGameObjects(FrameInfo &frameInfo, std::vector<GlorpGameObject> &gameObjects) {
     m_glorpPipeline->bind(frameInfo.commandBuffer);
 
-    auto projectionView = frameInfo.camera.getProjection() * frameInfo.camera.getView();
+    vkCmdBindDescriptorSets(
+        frameInfo.commandBuffer,
+        VK_PIPELINE_BIND_POINT_GRAPHICS,
+        m_pipelineLayout,
+        0, 1, 
+        &frameInfo.globalDescriptorSet,
+        0, nullptr
+    );
 
     for(auto &gameObject : gameObjects) {
         SimplePushConstantData push{};
-        auto modelMatrix = gameObject.transform.mat4();
 
-        push.transform = projectionView * modelMatrix;
+        push.modelMatrix =  gameObject.transform.mat4();
         push.normalMatrix = gameObject.transform.normalMatrix();
 
         vkCmdPushConstants(frameInfo.commandBuffer, m_pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(SimplePushConstantData), &push);

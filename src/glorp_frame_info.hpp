@@ -10,5 +10,6 @@ namespace Glorp {
         float frameTime;
         VkCommandBuffer commandBuffer;
         GlorpCamera &camera;
+        VkDescriptorSet globalDescriptorSet;
     };
 }

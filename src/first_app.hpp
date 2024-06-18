@@ -5,6 +5,7 @@
 #include "glorp_model.hpp"
 #include "glorp_game_object.hpp"
 #include "glorp_renderer.hpp"
+#include "glorp_descriptors.hpp"
 
 #include <memory>
 #include <vector>
@@ -28,7 +29,8 @@ class FirstApp {
         GlorpWindow m_glorpWindow {WIDTH, HEIGHT, "Glorp Engine"};
         GlorpDevice m_glorpDevice {m_glorpWindow};
         GlorpRenderer m_glorpRenderer {m_glorpWindow, m_glorpDevice};
-
+        
+        std::unique_ptr<GlorpDescriptorPool> globalPool {};
         std::vector<GlorpGameObject> m_gameObjects;
 };
 

@@ -26,25 +26,44 @@ struct GlobalUbo {
 };
 
 FirstApp::FirstApp() {
+    globalPool = GlorpDescriptorPool::Builder(m_glorpDevice)
+        .setMaxSets(GlorpSwapChain::MAX_FRAMES_IN_FLIGHT)
+        .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, GlorpSwapChain::MAX_FRAMES_IN_FLIGHT)
+        .build();
+
     loadGameObjects();
 }
 FirstApp::~FirstApp() {}
 
 
 void FirstApp::run() {
+    std::vector<std::unique_ptr<GlorpBuffer>> uboBuffers(GlorpSwapChain::MAX_FRAMES_IN_FLIGHT);
+    for(int i = 0; i < uboBuffers.size(); i++) {
+        uboBuffers[i] = std::make_unique<GlorpBuffer>(
+            m_glorpDevice,
+            sizeof(GlobalUbo),
+            1,
+            VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
+        );
+        uboBuffers[i]->map();
+    }
 
-    GlorpBuffer globalUboBuffer {
-        m_glorpDevice,
-        sizeof(GlobalUbo),
-        GlorpSwapChain::MAX_FRAMES_IN_FLIGHT,
-        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
-        m_glorpDevice.properties.limits.minUniformBufferOffsetAlignment
-    };
 
-    globalUboBuffer.map();
+    auto globalSetLayout = GlorpDescriptorSetLayout::Builder(m_glorpDevice)
+        .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
+        .build();
 
-    SimpleRenderSystem SimpleRenderSystem{m_glorpDevice, m_glorpRenderer.getSwapChainRenderPass()};
+    std::vector<VkDescriptorSet> globalDescriptorSets(GlorpSwapChain::MAX_FRAMES_IN_FLIGHT);
+
+    for(int i = 0; i < globalDescriptorSets.size(); i++) {
+        auto bufferInfo = uboBuffers[i]->descriptorInfo();
+        GlorpDescriptorWriter(*globalSetLayout, *globalPool)
+            .writeBuffer(0, &bufferInfo)
+            .build(globalDescriptorSets[i]);
+    }
+
+    SimpleRenderSystem simpleRenderSystem{m_glorpDevice, m_glorpRenderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout()};
     GlorpCamera camera{};
     
     auto viewerObject = GlorpGameObject::createGameObject();
@@ -71,17 +90,19 @@ void FirstApp::run() {
                 frameIndex,
                 frameTime,
                 commandBuffer,
-                camera
+                camera,
+                globalDescriptorSets[frameIndex]
             };
             //update
             GlobalUbo ubo{};
             ubo.projectionView = camera.getProjection() * camera.getView();
-            globalUboBuffer.writeToIndex(&ubo ,frameIndex);
-            globalUboBuffer.flushIndex(frameIndex);
+            
+            uboBuffers[frameIndex]->writeToBuffer(&ubo);
+            uboBuffers[frameIndex]->flush();
 
             // render
             m_glorpRenderer.beginSwapChainRenderPass(commandBuffer);
-            SimpleRenderSystem.renderGameObjects(frameInfo, m_gameObjects);
+            simpleRenderSystem.renderGameObjects(frameInfo, m_gameObjects);
             m_glorpRenderer.endSwapChainRenderPass(commandBuffer);
             m_glorpRenderer.endFrame();
         }

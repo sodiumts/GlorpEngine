@@ -16,7 +16,7 @@
 namespace Glorp {
 class SimpleRenderSystem {
     public:
-        SimpleRenderSystem(GlorpDevice &device, VkRenderPass renderPass);
+        SimpleRenderSystem(GlorpDevice &device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout);
         ~SimpleRenderSystem();
 
         SimpleRenderSystem(const SimpleRenderSystem&) = delete;
@@ -24,7 +24,7 @@ class SimpleRenderSystem {
 
         void renderGameObjects(FrameInfo &frameInfo, std::vector<GlorpGameObject> &gameObjects);
     private:
-        void createPipelineLayout();
+        void createPipelineLayout(VkDescriptorSetLayout globalSetLayout);
         void createPipeline(VkRenderPass renderPass);
     private:
         GlorpDevice &m_glorpDevice;
