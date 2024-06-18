@@ -24,7 +24,6 @@ class FirstApp {
         void run();
     private:
         void loadGameObjects();
-        void moveCat(float dt);
     private:
         GlorpWindow m_glorpWindow {WIDTH, HEIGHT, "Glorp Engine"};
         GlorpDevice m_glorpDevice {m_glorpWindow};
