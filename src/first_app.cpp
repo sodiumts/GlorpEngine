@@ -53,7 +53,7 @@ void FirstApp::run() {
 
 
     auto globalSetLayout = GlorpDescriptorSetLayout::Builder(m_glorpDevice)
-        .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
+        .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS)
         .build();
 
     std::vector<VkDescriptorSet> globalDescriptorSets(GlorpSwapChain::MAX_FRAMES_IN_FLIGHT);
@@ -94,7 +94,8 @@ void FirstApp::run() {
                 frameTime,
                 commandBuffer,
                 camera,
-                globalDescriptorSets[frameIndex]
+                globalDescriptorSets[frameIndex],
+                m_gameObjects
             };
             //update
             GlobalUbo ubo{};
@@ -105,7 +106,7 @@ void FirstApp::run() {
 
             // render
             m_glorpRenderer.beginSwapChainRenderPass(commandBuffer);
-            simpleRenderSystem.renderGameObjects(frameInfo, m_gameObjects);
+            simpleRenderSystem.renderGameObjects(frameInfo);
             m_glorpRenderer.endSwapChainRenderPass(commandBuffer);
             m_glorpRenderer.endFrame();
         }
@@ -122,7 +123,7 @@ void FirstApp::loadGameObjects() {
     smoothVaseObject.model = smoothVaseModel;
     smoothVaseObject.transform.translation = {-.5f, .5f, 0.f};
     smoothVaseObject.transform.scale = {3.f, 1.5f, 3.f};
-    m_gameObjects.push_back(std::move(smoothVaseObject));
+    m_gameObjects.emplace(smoothVaseObject.getId(), std::move(smoothVaseObject));
 
     std::shared_ptr<GlorpModel> flatVaseModel = GlorpModel::createModelFromFile(m_glorpDevice, std::string(MODELS_DIR) + "/flat_vase.obj");
     auto flatVaseObject = GlorpGameObject::createGameObject();
@@ -130,7 +131,7 @@ void FirstApp::loadGameObjects() {
     flatVaseObject.model = flatVaseModel;
     flatVaseObject.transform.translation = {.5f, .5f, 0.f};
     flatVaseObject.transform.scale = {3.f, 1.5f, 3.f};
-    m_gameObjects.push_back(std::move(flatVaseObject));
+    m_gameObjects.emplace(flatVaseObject.getId(), std::move(flatVaseObject));
 
     std::shared_ptr<GlorpModel> floorModel = GlorpModel::createModelFromFile(m_glorpDevice, std::string(MODELS_DIR) + "/quad.obj");
     auto floorObject = GlorpGameObject::createGameObject();
@@ -138,7 +139,7 @@ void FirstApp::loadGameObjects() {
     floorObject.model = floorModel;
     floorObject.transform.translation = {.0f, .5f, .0f};
     floorObject.transform.scale = {3.f, 1.f, 3.f};
-    m_gameObjects.push_back(std::move(floorObject));
+    m_gameObjects.emplace(floorObject.getId(), std::move(floorObject));
 }
 
 }

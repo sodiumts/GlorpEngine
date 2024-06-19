@@ -31,7 +31,7 @@ class FirstApp {
         GlorpRenderer m_glorpRenderer {m_glorpWindow, m_glorpDevice};
         
         std::unique_ptr<GlorpDescriptorPool> globalPool {};
-        std::vector<GlorpGameObject> m_gameObjects;
+        GlorpGameObject::Map m_gameObjects;
 };
 
 }

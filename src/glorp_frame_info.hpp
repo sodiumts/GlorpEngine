@@ -1,6 +1,7 @@
 #pragma once
 
 #include "glorp_camera.hpp"
+#include "glorp_game_object.hpp"
 
 #include <vulkan/vulkan.h>
 
@@ -11,5 +12,6 @@ namespace Glorp {
         VkCommandBuffer commandBuffer;
         GlorpCamera &camera;
         VkDescriptorSet globalDescriptorSet;
+        GlorpGameObject::Map &gameObjects;
     };
 }

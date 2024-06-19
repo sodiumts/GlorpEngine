@@ -5,6 +5,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include <memory>
+#include <unordered_map>
 
 namespace Glorp {
 struct TransformComponent {
@@ -18,6 +19,7 @@ struct TransformComponent {
 class GlorpGameObject {
     public:
     using id_t = unsigned int;
+    using Map = std::unordered_map<id_t, GlorpGameObject>;
 
     static GlorpGameObject createGameObject() {
         static id_t currentId = 0;
