@@ -1,6 +1,8 @@
 #include "first_app.hpp"
 
-#include "simple_render_system.hpp"
+#include "systems/simple_render_system.hpp"
+#include "systems/point_light_system.hpp"
+
 #include "glorp_camera.hpp" 
 #include "keyboard_movement_controller.hpp"
 #include "glorp_buffer.hpp"
@@ -21,7 +23,8 @@
 namespace Glorp {
 
 struct GlobalUbo {
-    glm::mat4 projectionView{1.f};
+    glm::mat4 projection{1.f};
+    glm::mat4 view{1.f};
     glm::vec4 ambientLightColor {1.f, 1.f, 1.f, 0.02f};
     glm::vec3 lightPosition{-1.f};
     alignas(16) glm::vec4 lightColor{1.f};
@@ -66,6 +69,8 @@ void FirstApp::run() {
     }
 
     SimpleRenderSystem simpleRenderSystem{m_glorpDevice, m_glorpRenderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout()};
+    PointLightSystem pointLightSystem{m_glorpDevice, m_glorpRenderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout()};
+
     GlorpCamera camera{};
     
     auto viewerObject = GlorpGameObject::createGameObject();
@@ -99,7 +104,8 @@ void FirstApp::run() {
             };
             //update
             GlobalUbo ubo{};
-            ubo.projectionView = camera.getProjection() * camera.getView();
+            ubo.projection = camera.getProjection();
+            ubo.view = camera.getView();
             
             uboBuffers[frameIndex]->writeToBuffer(&ubo);
             uboBuffers[frameIndex]->flush();
@@ -107,6 +113,7 @@ void FirstApp::run() {
             // render
             m_glorpRenderer.beginSwapChainRenderPass(commandBuffer);
             simpleRenderSystem.renderGameObjects(frameInfo);
+            pointLightSystem.render(frameInfo);
             m_glorpRenderer.endSwapChainRenderPass(commandBuffer);
             m_glorpRenderer.endFrame();
         }
