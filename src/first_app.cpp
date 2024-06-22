@@ -22,14 +22,6 @@
 
 namespace Glorp {
 
-struct GlobalUbo {
-    glm::mat4 projection{1.f};
-    glm::mat4 view{1.f};
-    glm::vec4 ambientLightColor {1.f, 1.f, 1.f, 0.02f};
-    glm::vec3 lightPosition{-1.f};
-    alignas(16) glm::vec4 lightColor{1.f};
-};
-
 FirstApp::FirstApp() {
     globalPool = GlorpDescriptorPool::Builder(m_glorpDevice)
         .setMaxSets(GlorpSwapChain::MAX_FRAMES_IN_FLIGHT)
@@ -106,6 +98,7 @@ void FirstApp::run() {
             GlobalUbo ubo{};
             ubo.projection = camera.getProjection();
             ubo.view = camera.getView();
+            pointLightSystem.update(frameInfo, ubo);
             
             uboBuffers[frameIndex]->writeToBuffer(&ubo);
             uboBuffers[frameIndex]->flush();
@@ -147,6 +140,24 @@ void FirstApp::loadGameObjects() {
     floorObject.transform.translation = {.0f, .5f, .0f};
     floorObject.transform.scale = {3.f, 1.f, 3.f};
     m_gameObjects.emplace(floorObject.getId(), std::move(floorObject));
+ 
+
+    std::vector<glm::vec3> lightColors{
+        {1.f, .1f, .1f},
+        {.1f, .1f, 1.f},
+        {.1f, 1.f, .1f},
+        {1.f, 1.f, .1f},
+        {.1f, 1.f, 1.f},
+        {1.f, 1.f, 1.f} 
+    };
+
+    for (int i = 0; i < lightColors.size(); i++) {
+        auto pl = GlorpGameObject::makePointLight(0.5f);
+        pl.color = lightColors[i];
+        auto rotateLight = glm::rotate(glm::mat4(1.f), (i * glm::two_pi<float>()) / lightColors.size(), {0.f, -1.f, 0.f});
+        pl.transform.translation = glm::vec3(rotateLight * glm::vec4(-1.f, -1.f, -1.f, 1.f));
+        m_gameObjects.emplace(pl.getId(), std::move(pl));
+    }
 }
 
 }
