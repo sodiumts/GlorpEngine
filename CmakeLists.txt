@@ -99,7 +99,10 @@ if (WIN32)
 elseif(APPLE)
     message(SATUS "CREATING BUILD FOR MACOS")
 
-    target_include_directories(${PROJECT_NAME} PUBLIC ${TINYOBJ_PATH})
+    target_include_directories(${PROJECT_NAME} PUBLIC
+       ${TINYOBJ_PATH}
+       ${PROJECT_SOURCE_DIR}/src
+    )
     target_link_libraries(${PROJECT_NAME} glfw Vulkan::Vulkan)
     target_compile_definitions(GlorpEngine PRIVATE APPLE)
 elseif (UNIX)
