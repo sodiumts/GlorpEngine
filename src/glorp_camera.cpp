@@ -44,6 +44,20 @@ void GlorpCamera::setViewDirection(glm::vec3 position, glm::vec3 direction, glm:
   m_viewMatrix[3][0] = -glm::dot(u, position);
   m_viewMatrix[3][1] = -glm::dot(v, position);
   m_viewMatrix[3][2] = -glm::dot(w, position);
+
+  m_inverseViewMatrix = glm::mat4{1.f};
+  m_inverseViewMatrix[0][0] = u.x;
+  m_inverseViewMatrix[0][1] = u.y;
+  m_inverseViewMatrix[0][2] = u.z;
+  m_inverseViewMatrix[1][0] = v.x;
+  m_inverseViewMatrix[1][1] = v.y;
+  m_inverseViewMatrix[1][2] = v.z;
+  m_inverseViewMatrix[2][0] = w.x;
+  m_inverseViewMatrix[2][1] = w.y;
+  m_inverseViewMatrix[2][2] = w.z;
+  m_inverseViewMatrix[3][0] = position.x;
+  m_inverseViewMatrix[3][1] = position.y;
+  m_inverseViewMatrix[3][2] = position.z;
 }
 
 void GlorpCamera::setViewTarget(glm::vec3 position, glm::vec3 target, glm::vec3 up) {
@@ -73,5 +87,19 @@ void GlorpCamera::setViewYXZ(glm::vec3 position, glm::vec3 rotation) {
   m_viewMatrix[3][0] = -glm::dot(u, position);
   m_viewMatrix[3][1] = -glm::dot(v, position);
   m_viewMatrix[3][2] = -glm::dot(w, position);
+
+  m_inverseViewMatrix = glm::mat4{1.f};
+  m_inverseViewMatrix[0][0] = u.x;
+  m_inverseViewMatrix[0][1] = u.y;
+  m_inverseViewMatrix[0][2] = u.z;
+  m_inverseViewMatrix[1][0] = v.x;
+  m_inverseViewMatrix[1][1] = v.y;
+  m_inverseViewMatrix[1][2] = v.z;
+  m_inverseViewMatrix[2][0] = w.x;
+  m_inverseViewMatrix[2][1] = w.y;
+  m_inverseViewMatrix[2][2] = w.z;
+  m_inverseViewMatrix[3][0] = position.x;
+  m_inverseViewMatrix[3][1] = position.y;
+  m_inverseViewMatrix[3][2] = position.z;
 }
 }

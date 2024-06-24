@@ -18,8 +18,9 @@ struct PointLight {
 layout(set = 0, binding = 0) uniform GlobalUbo {
     mat4 projection;
     mat4 view;
+    mat4 invView;
     vec4 ambientLightColor;
-    PointLight pointLight[10];
+    PointLight pointLights[10];
     int numLights;
 } ubo;
 
