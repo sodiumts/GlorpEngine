@@ -37,6 +37,8 @@ class GlorpPipeline {
         static void defaultPipelineConfigInfo(PipelineConfigInfo &configInfo);
         void bind(VkCommandBuffer commandBuffer);
 
+        static void enableAlphaBlending(PipelineConfigInfo &configInfo);
+
     private:
         static std::vector<char> readFile(const std::string& filePath);
 

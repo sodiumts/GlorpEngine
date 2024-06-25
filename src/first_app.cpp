@@ -106,8 +106,11 @@ void FirstApp::run() {
 
             // render
             m_glorpRenderer.beginSwapChainRenderPass(commandBuffer);
+            
+            
             simpleRenderSystem.renderGameObjects(frameInfo);
             pointLightSystem.render(frameInfo);
+
             m_glorpRenderer.endSwapChainRenderPass(commandBuffer);
             m_glorpRenderer.endFrame();
         }
