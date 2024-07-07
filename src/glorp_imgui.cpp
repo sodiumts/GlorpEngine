@@ -6,10 +6,12 @@
 #include "imgui_impl_vulkan.h"
 
 #include <cmath>
+#include <numeric>
 
 namespace Glorp {
 GlorpImgui::GlorpImgui(GlorpDevice &device, VkRenderPass renderPass, GlorpWindow &window) : m_glorpDevice(device), m_glorpWindow(window) {
     initImgui(renderPass);
+    fpsSamples.reserve(m_maxFpsSamples);
 }
 
 GlorpImgui::~GlorpImgui() {
@@ -60,8 +62,14 @@ void GlorpImgui::drawUI(FrameInfo &frameInfo) {
 void GlorpImgui::defaultWindow(FrameInfo &frameInfo) {
     ImGui::Begin("Debug");
     ImGui::Text("Frame time (ms): %f",frameInfo.frameTime * 1000);
-    float fps = 1 / frameInfo.frameTime;
-    int roundedFps = static_cast<int>(std::round(fps));
+
+    float fps = 1.0f / frameInfo.frameTime;
+    fpsSamples.push_back(fps);
+    if (fpsSamples.size() > m_maxFpsSamples) {
+        fpsSamples.erase(fpsSamples.begin());
+    }
+    float averageFps = std::accumulate(fpsSamples.begin(), fpsSamples.end(), 0.0f) / fpsSamples.size();
+    int roundedFps = static_cast<int>(std::round(averageFps));
     ImGui::Text("Frames Per Second: %d", roundedFps);
 
 

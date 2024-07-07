@@ -5,6 +5,7 @@
 #include "glorp_descriptors.hpp"
 
 #include <memory>
+#include <vector>
 
 namespace Glorp {
 
@@ -26,5 +27,8 @@ class GlorpImgui {
 
         float m_lightBrightness = .5f;
         float m_rotationMultiplier = 1.f;
+        int m_maxFpsSamples = 2000;
+        std::vector<float> fpsSamples;
+
 };
 }
