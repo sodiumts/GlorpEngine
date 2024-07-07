@@ -50,7 +50,7 @@ void PointLightSystem::createPipelineLayout(VkDescriptorSetLayout globalSetLayou
 void PointLightSystem::update(FrameInfo &frameInfo, GlobalUbo &ubo) {
     int lightIndex = 0;
     
-    auto rotateLight = glm::rotate(glm::mat4(1.f), frameInfo.frameTime, {0.f, -1.f, 0.f});
+    auto rotateLight = glm::rotate(glm::mat4(1.f), frameInfo.frameTime * frameInfo.lightRotationMultiplier, {0.f, -1.f, 0.f});
 
     for (auto& kv: frameInfo.gameObjects) {
         auto& obj = kv.second;
@@ -60,7 +60,7 @@ void PointLightSystem::update(FrameInfo &frameInfo, GlobalUbo &ubo) {
         obj.transform.translation = glm::vec3(rotateLight * glm::vec4(obj.transform.translation, 1.f));
         
         ubo.pointLights[lightIndex].position = glm::vec4(obj.transform.translation, 1.f);
-        ubo.pointLights[lightIndex].color = glm::vec4(obj.color, obj.pointLight->lightIntensity);
+        ubo.pointLights[lightIndex].color = glm::vec4(obj.color, frameInfo.lightIntensity);
         
         lightIndex++;
     }

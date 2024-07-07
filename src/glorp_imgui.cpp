@@ -5,6 +5,8 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_vulkan.h"
 
+#include <cmath>
+
 namespace Glorp {
 GlorpImgui::GlorpImgui(GlorpDevice &device, VkRenderPass renderPass, GlorpWindow &window) : m_glorpDevice(device), m_glorpWindow(window) {
     initImgui(renderPass);
@@ -24,7 +26,6 @@ void GlorpImgui::initImgui(VkRenderPass renderPass) {
         .build();
         
     ImGui::CreateContext();
-    ImGui::StyleColorsDark();
 
     ImGui_ImplGlfw_InitForVulkan(m_glorpWindow.getGLFWwindow(), true);
 
@@ -48,9 +49,27 @@ void GlorpImgui::drawUI(FrameInfo &frameInfo) {
     ImGui_ImplVulkan_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
-    ImGui::ShowDemoWindow();
+    // ImGui::ShowDemoWindow();
+    defaultWindow(frameInfo);
+
     ImGui::Render();
     ImDrawData* draw_data = ImGui::GetDrawData();
     ImGui_ImplVulkan_RenderDrawData(draw_data, frameInfo.commandBuffer);
+}
+
+void GlorpImgui::defaultWindow(FrameInfo &frameInfo) {
+    ImGui::Begin("Debug");
+    ImGui::Text("Frame time (ms): %f",frameInfo.frameTime * 1000);
+    float fps = 1 / frameInfo.frameTime;
+    int roundedFps = static_cast<int>(std::round(fps));
+    ImGui::Text("Frames Per Second: %d", roundedFps);
+
+
+    if(ImGui::CollapsingHeader("Light Control")) {
+        ImGui::SliderFloat("Brightness", &m_lightBrightness, 0.0f, 1.0f);
+        ImGui::SliderFloat("Rotation Multiplier", &m_rotationMultiplier, 0.0f, 10.f);
+    }
+    
+    ImGui::End();
 }
 }

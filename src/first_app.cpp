@@ -32,35 +32,6 @@ FirstApp::FirstApp() {
 }
 FirstApp::~FirstApp() {}
 
-// void FirstApp::initImgui() {
-
-//     imguiPool = GlorpDescriptorPool::Builder(m_glorpDevice)
-//         .setMaxSets(1)
-//         .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1)
-//         .setPoolFlags(VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT)
-//         .build();
-        
-//     ImGui::CreateContext();
-//     ImGui::StyleColorsDark();
-
-//     ImGui_ImplGlfw_InitForVulkan(m_glorpWindow.getGLFWwindow(), true);
-
-//     ImGui_ImplVulkan_InitInfo init_info = {};
-//     init_info.Instance = m_glorpDevice.instance();
-//     init_info.PhysicalDevice = m_glorpDevice.physicalDevice();
-//     init_info.Device = m_glorpDevice.device();
-//     init_info.QueueFamily = m_glorpDevice.findPhysicalQueueFamilies().graphicsFamily;
-//     init_info.Queue = m_glorpDevice.graphicsQueue();
-//     init_info.PipelineCache = VK_NULL_HANDLE;
-//     init_info.DescriptorPool = imguiPool->getRawPool();
-//     init_info.RenderPass = m_glorpRenderer.getSwapChainRenderPass();
-//     init_info.Subpass = 0;
-//     init_info.MinImageCount = GlorpSwapChain::MAX_FRAMES_IN_FLIGHT;
-//     init_info.ImageCount = GlorpSwapChain::MAX_FRAMES_IN_FLIGHT;
-//     init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
-//     ImGui_ImplVulkan_Init(&init_info);
-// }
-
 void FirstApp::run() {
     std::vector<std::unique_ptr<GlorpBuffer>> uboBuffers(GlorpSwapChain::MAX_FRAMES_IN_FLIGHT);
     for(int i = 0; i < uboBuffers.size(); i++) {
@@ -122,7 +93,9 @@ void FirstApp::run() {
                 commandBuffer,
                 camera,
                 globalDescriptorSets[frameIndex],
-                m_gameObjects
+                m_gameObjects,
+                glorpImgui.getLightIntensity(),
+                glorpImgui.getRotationMultiplier()
             };
             //update
             GlobalUbo ubo{};

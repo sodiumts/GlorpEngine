@@ -30,6 +30,8 @@ struct FrameInfo {
     GlorpCamera &camera;
     VkDescriptorSet globalDescriptorSet;
     GlorpGameObject::Map &gameObjects;
+    float lightIntensity;
+    float lightRotationMultiplier;
 };
 
 }
