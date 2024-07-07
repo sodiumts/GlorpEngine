@@ -6,6 +6,7 @@
 #include "glorp_game_object.hpp"
 #include "glorp_renderer.hpp"
 #include "glorp_descriptors.hpp"
+#include "glorp_imgui.hpp"
 
 #include <memory>
 #include <vector>
@@ -25,12 +26,14 @@ class FirstApp {
         void run();
     private:
         void loadGameObjects();
+        void initImgui();
     private:
         GlorpWindow m_glorpWindow {WIDTH, HEIGHT, "Glorp Engine"};
         GlorpDevice m_glorpDevice {m_glorpWindow};
         GlorpRenderer m_glorpRenderer {m_glorpWindow, m_glorpDevice};
         
         std::unique_ptr<GlorpDescriptorPool> globalPool {};
+        std::unique_ptr<GlorpDescriptorPool> imguiPool {};
         GlorpGameObject::Map m_gameObjects;
 };
 

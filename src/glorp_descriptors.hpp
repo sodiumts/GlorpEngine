@@ -76,6 +76,8 @@ class GlorpDescriptorPool {
   void freeDescriptors(std::vector<VkDescriptorSet> &descriptors) const;
  
   void resetPool();
+
+  VkDescriptorPool getRawPool() { return descriptorPool; }
  
  private:
   GlorpDevice &glorpDevice;

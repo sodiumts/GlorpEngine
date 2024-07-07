@@ -2,6 +2,7 @@
 
 #include <stdexcept>
 #include <array>
+#include "imgui.h"
 
 namespace Glorp {
 
@@ -123,6 +124,9 @@ void GlorpRenderer::beginSwapChainRenderPass(VkCommandBuffer commandBuffer) {
     VkRect2D scissor{{0,0}, m_glorpSwapChain->getSwapChainExtent()};
     vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
     vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+
+    
+
 }
 void GlorpRenderer::endSwapChainRenderPass(VkCommandBuffer commandBuffer) {
     assert(m_isFrameStarted && "Cannot end swap chain render pass if frame is not in progress");

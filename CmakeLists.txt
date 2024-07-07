@@ -62,9 +62,16 @@ if (NOT TINYOBJ_PATH)
   set(TINYOBJ_PATH external/tinyobjloader)
 endif()
 
-file(GLOB_RECURSE SOURCES ${PROJECT_SOURCE_DIR}/src/*.cpp)
+file(GLOB_RECURSE SOURCES ${PROJECT_SOURCE_DIR}/src/*.cpp )
+file(GLOB IMGUI_SOURCES 
+  ${PROJECT_SOURCE_DIR}/external/imgui/*.cpp 
+  ${PROJECT_SOURCE_DIR}/external/imgui/backends/imgui_impl_vulkan.cpp
+  ${PROJECT_SOURCE_DIR}/external/imgui/backends/imgui_impl_glfw.cpp
+)
 
-add_executable(${PROJECT_NAME} ${SOURCES})
+add_executable(${PROJECT_NAME} ${SOURCES} ${IMGUI_SOURCES})
+
+
 
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
 
@@ -81,9 +88,11 @@ if (WIN32)
       ${MINGW_PATH}/lib
     )
   endif()
-
   target_include_directories(${PROJECT_NAME} PUBLIC
     ${PROJECT_SOURCE_DIR}/src
+    ${PROJECT_SOURCE_DIR}/external/imgui
+    ${PROJECT_SOURCE_DIR}/external/imgui/backends
+
     ${Vulkan_INCLUDE_DIRS}
     ${TINYOBJ_PATH}
     ${GLFW_INCLUDE_DIRS}

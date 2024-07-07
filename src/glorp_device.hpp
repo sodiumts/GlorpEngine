@@ -44,6 +44,8 @@ class GlorpDevice {
   VkSurfaceKHR surface() { return m_surface_; }
   VkQueue graphicsQueue() { return m_graphicsQueue_; }
   VkQueue presentQueue() { return m_presentQueue_; }
+  VkInstance instance() { return m_instance; }
+  VkPhysicalDevice physicalDevice() { return m_physicalDevice; }
 
   SwapChainSupportDetails getSwapChainSupport() { return querySwapChainSupport(m_physicalDevice); }
   uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
