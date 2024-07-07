@@ -1,7 +1,7 @@
 include(./.env.cmake OPTIONAL RESULT_VARIABLE LOCAL_ENV)
 message(STATUS "Local .env.cmake: ${LOCAL_ENV}")
 
-cmake_minimum_required(VERSION 3.29.2)
+cmake_minimum_required(VERSION 3.29.5)
 
 set(NAME GlorpEngine)
 
@@ -71,9 +71,7 @@ file(GLOB IMGUI_SOURCES
 
 add_executable(${PROJECT_NAME} ${SOURCES} ${IMGUI_SOURCES})
 
-
-
-target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
+target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_23)
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/build")
 
@@ -109,8 +107,10 @@ elseif(APPLE)
     message(SATUS "CREATING BUILD FOR MACOS")
 
     target_include_directories(${PROJECT_NAME} PUBLIC
-       ${TINYOBJ_PATH}
-       ${PROJECT_SOURCE_DIR}/src
+      ${PROJECT_SOURCE_DIR}/external/imgui
+      ${PROJECT_SOURCE_DIR}/external/imgui/backends
+      ${TINYOBJ_PATH}
+      ${PROJECT_SOURCE_DIR}/src
     )
     target_link_libraries(${PROJECT_NAME} glfw Vulkan::Vulkan)
     target_compile_definitions(GlorpEngine PRIVATE APPLE)
