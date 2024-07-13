@@ -1,0 +1,61 @@
+# Glorp Engine
+Glorp engine is a Vulkan / GLFW based rendering engine for MacOS and Windows written in C++
+
+## Prerequisites For Building
+
+**Clone the repository using with recurse submodules**
+Make sure you have the following tools installed on your system:
+### General requirements
+* **CMake** (version 3.29.0 or later)
+### Platform-specific requirements
+**Windows**
+* **MinGW** (for MinGW Makefile generation) 
+  * Ensure `MINGW_PATH` is set in `.env.cmake`  
+
+**MacOS**
+* **Xcode command line tools**
+### Libraries
+* **Vulkan SDK**: Make sure Vulkan is installed and `VULKAN_SDK_PATH` is set in `.env.cmake` if using a specific version. Consult [LunarG](https://vulkan.lunarg.com/) for the Vulkan SDK installation.
+* **GLFW**: Also make sure GLFW is installed and `GLFW_PATH` is set in `.env.cmake`.
+* **tinyOBJLoader**: Make sure the project `external/tinyobjloader` directory contains the `tiny_obj_loader.h` header. Or provide your own specific version and specify `TINYOBJ_PATH` in `.env.cmake`.
+* **Dear ImGui**: The external folder should contain the git submodule for Dear ImGui.
+## Environment Setup
+### .env.cmake
+Create a `.env.cmake` file in the project root and specify the necessary dependency paths:
+```cmake
+# .env.cmake
+set(MINGW_PATH "C:/path/to/mingw")
+set(VULKAN_SDK_PATH "C:/path/to/vulkan")
+set(GLFW_PATH "C:/path/to/glfw")
+set(TINYOBJ_PATH "path/to/tinyobjloader") # Optional if using the included version
+```
+
+## Building The Project
+Make sure you have all the required dependencies installed on your system.
+1. Clone the repository with all the git submodules.
+```sh
+git clone --recurse-submodules https://github.com/sodiumts/GlorpEngine
+cd GlorpEngine
+```
+2. Run either `macBuild.sh` or `winBuild.bat` to set up the project and build it.
+
+**MacOS**:
+```sh
+./macBuild.sh
+```
+**Windows**:
+```sh
+./winBuild.bat
+```
+## Running The Project
+After building, the executable file should be located in the `build` directory with the name `GlorpEngine`.
+
+### Aditional Notes
+* For shader compilation, ensure `glslangValidator` is available in your system path.
+
+## Contributing
+
+Pull requests are welcome. For major changes, please open an issue first
+to discuss what you would like to change.
+## License
+This project is licensed under the [MIT](https://choosealicense.com/licenses/mit/) license.
