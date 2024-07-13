@@ -37,7 +37,7 @@ Make sure you have all the required dependencies installed on your system.
 git clone --recurse-submodules https://github.com/sodiumts/GlorpEngine
 cd GlorpEngine
 ```
-2. Run either `macBuild.sh` or `winBuild.bat` to set up the project and build it.
+2. Run either `macBuild.sh` or `winBuild.bat` to set up the project and build it (and run it on macOS).
 
 **MacOS**:
 ```sh
