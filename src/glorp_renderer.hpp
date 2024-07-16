@@ -50,3 +50,4 @@ class GlorpRenderer {
         int m_currentFrameIndex = 0;
         bool m_isFrameStarted = false;
 };
+}
