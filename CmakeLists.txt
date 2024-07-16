@@ -5,6 +5,8 @@ project(GlorpEngine VERSION 0.0.0)
 include(./.env.cmake OPTIONAL RESULT_VARIABLE LOCAL_ENV)
 message(STATUS "Local .env.cmake: ${LOCAL_ENV}")
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 message(STATUS "Using CMake generator: ${CMAKE_GENERATOR}")
 
 if (CMAKE_GENERATOR STREQUAL "MinGW Makefiles")

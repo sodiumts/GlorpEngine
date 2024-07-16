@@ -1,17 +1,14 @@
-#pragma once 
+#pragma once
 
 #include "glorp_pipeline.hpp"
 #include "glorp_device.hpp"
-#include "glorp_game_object.hpp"
-#include "glorp_camera.hpp"
 #include "glorp_frame_info.hpp"
 
 #include <memory>
-#include <vector>
 
 #ifndef SHADERS_DIR
 #define SHADERS_DIR
-#endif 
+#endif
 
 namespace Glorp {
 class SimpleRenderSystem {

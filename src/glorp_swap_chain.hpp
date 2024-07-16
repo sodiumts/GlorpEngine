@@ -6,7 +6,6 @@
 #include <vulkan/vulkan.h>
 
 // std lib headers
-#include <string>
 #include <vector>
 #include <memory>
 
@@ -60,7 +59,7 @@ class GlorpSwapChain {
   VkPresentModeKHR chooseSwapPresentMode(
       const std::vector<VkPresentModeKHR> &availablePresentModes);
   VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR &capabilities);
-  
+
  private:
   VkFormat m_swapChainImageFormat;
   VkFormat m_swapChainDepthFormat;

@@ -1,7 +1,6 @@
 #include "point_light_system.hpp"
 
 #include <stdexcept>
-#include <array>
 #include <map>
 
 #define GLM_FORCE_RADIANS
@@ -35,7 +34,7 @@ void PointLightSystem::createPipelineLayout(VkDescriptorSetLayout globalSetLayou
 
     std::vector<VkDescriptorSetLayout> descriptorSetLayouts{globalSetLayout};
 
-    
+
     VkPipelineLayoutCreateInfo pipelineLayoutInfo {};
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(descriptorSetLayouts.size());
@@ -49,7 +48,7 @@ void PointLightSystem::createPipelineLayout(VkDescriptorSetLayout globalSetLayou
 
 void PointLightSystem::update(FrameInfo &frameInfo, GlobalUbo &ubo) {
     int lightIndex = 0;
-    
+
     auto rotateLight = glm::rotate(glm::mat4(1.f), frameInfo.frameTime * frameInfo.lightRotationMultiplier, {0.f, -1.f, 0.f});
 
     for (auto& kv: frameInfo.gameObjects) {
@@ -58,10 +57,10 @@ void PointLightSystem::update(FrameInfo &frameInfo, GlobalUbo &ubo) {
         assert(lightIndex < MAX_LIGHTS && "The maximum amount of lights has been exceeded");
 
         obj.transform.translation = glm::vec3(rotateLight * glm::vec4(obj.transform.translation, 1.f));
-        
+
         ubo.pointLights[lightIndex].position = glm::vec4(obj.transform.translation, 1.f);
         ubo.pointLights[lightIndex].color = glm::vec4(obj.color, frameInfo.lightIntensity);
-        
+
         lightIndex++;
     }
     ubo.numLights = lightIndex;
@@ -104,12 +103,12 @@ void PointLightSystem::render(FrameInfo &frameInfo) {
         frameInfo.commandBuffer,
         VK_PIPELINE_BIND_POINT_GRAPHICS,
         m_pipelineLayout,
-        0, 1, 
+        0, 1,
         &frameInfo.globalDescriptorSet,
         0, nullptr
     );
-    
-    
+
+
 
     for (auto it = sorted.rbegin(); it != sorted.rend(); it++) {
         auto& obj = frameInfo.gameObjects.at(it->second);

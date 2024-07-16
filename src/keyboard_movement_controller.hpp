@@ -1,7 +1,6 @@
-#pragma once 
+#pragma once
 
 #include "glorp_game_object.hpp"
-#include "glorp_window.hpp"
 
 namespace Glorp {
 

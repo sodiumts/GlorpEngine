@@ -1,7 +1,6 @@
 #include "simple_render_system.hpp"
 
 #include <stdexcept>
-#include <array>
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -33,7 +32,7 @@ void SimpleRenderSystem::createPipelineLayout(VkDescriptorSetLayout globalSetLay
 
     std::vector<VkDescriptorSetLayout> descriptorSetLayouts{globalSetLayout};
 
-    
+
     VkPipelineLayoutCreateInfo pipelineLayoutInfo {};
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(descriptorSetLayouts.size());
@@ -68,7 +67,7 @@ void SimpleRenderSystem::renderGameObjects(FrameInfo &frameInfo) {
         frameInfo.commandBuffer,
         VK_PIPELINE_BIND_POINT_GRAPHICS,
         m_pipelineLayout,
-        0, 1, 
+        0, 1,
         &frameInfo.globalDescriptorSet,
         0, nullptr
     );

@@ -1,9 +1,8 @@
-#pragma once 
+#pragma once
 
 #include "glorp_window.hpp"
 #include "glorp_device.hpp"
 #include "glorp_swap_chain.hpp"
-#include "glorp_model.hpp"
 
 #include <memory>
 #include <vector>
@@ -17,9 +16,9 @@ class GlorpRenderer {
 
         GlorpRenderer(const GlorpRenderer&) = delete;
         GlorpRenderer &operator=(const GlorpRenderer &) = delete;
-        
+
         VkRenderPass getSwapChainRenderPass() const { return m_glorpSwapChain->getRenderPass(); }
-        float getAspectRatio() const { return m_glorpSwapChain->extentAspectRatio(); } 
+        float getAspectRatio() const { return m_glorpSwapChain->extentAspectRatio(); }
         bool isFrameInProgress() const { return m_isFrameStarted; }
 
         VkCommandBuffer getCurrentCommandBuffer() const {
@@ -28,7 +27,7 @@ class GlorpRenderer {
         }
         int getFrameIndex() const {
             assert(m_isFrameStarted && "Cannot get current frame index while the frame is not in progress");
-            return m_currentFrameIndex; 
+            return m_currentFrameIndex;
         }
 
         VkCommandBuffer beginFrame();

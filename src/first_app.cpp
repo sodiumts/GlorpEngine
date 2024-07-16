@@ -1,14 +1,13 @@
 #include "first_app.hpp"
 
+#include "glorp_imgui.hpp"
 #include "systems/simple_render_system.hpp"
 #include "systems/point_light_system.hpp"
 
-#include "glorp_camera.hpp" 
+#include "glorp_camera.hpp"
 #include "keyboard_movement_controller.hpp"
 #include "glorp_buffer.hpp"
 
-#include <stdexcept>
-#include <array>
 #include <chrono>
 
 #define GLM_FORCE_RADIANS
@@ -64,12 +63,12 @@ void FirstApp::run() {
     GlorpImgui glorpImgui{m_glorpDevice, m_glorpRenderer.getSwapChainRenderPass(), m_glorpWindow};
 
     GlorpCamera camera{};
-    
+
     auto viewerObject = GlorpGameObject::createGameObject();
     viewerObject.transform.translation.z = -2.5f;
     KeyboardMovementController cameraController{};
 
-    
+
     auto currentTime = std::chrono::high_resolution_clock::now();
     while(!m_glorpWindow.shouldClose()) {
         glfwPollEvents();
@@ -79,7 +78,7 @@ void FirstApp::run() {
         currentTime = newTime;
 
         cameraController.moveInPlaneXZ(m_glorpWindow.getGLFWwindow(), frameTime, viewerObject);
-        camera.setViewYXZ(viewerObject.transform.translation, viewerObject.transform.rotation);        
+        camera.setViewYXZ(viewerObject.transform.translation, viewerObject.transform.rotation);
         float aspect = m_glorpRenderer.getAspectRatio();
         camera.setPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 1000.f);
 
@@ -103,17 +102,17 @@ void FirstApp::run() {
             ubo.view = camera.getView();
             ubo.inverseView = camera.getInverseView();
             pointLightSystem.update(frameInfo, ubo);
-            
+
             uboBuffers[frameIndex]->writeToBuffer(&ubo);
             uboBuffers[frameIndex]->flush();
 
             // render
             m_glorpRenderer.beginSwapChainRenderPass(commandBuffer);
-            
-            
+
+
             simpleRenderSystem.renderGameObjects(frameInfo);
             pointLightSystem.render(frameInfo);
-            
+
             glorpImgui.drawUI(frameInfo);
 
             m_glorpRenderer.endSwapChainRenderPass(commandBuffer);
@@ -148,7 +147,7 @@ void FirstApp::loadGameObjects() {
     floorObject.transform.translation = {.0f, .5f, .0f};
     floorObject.transform.scale = {3.f, 1.f, 3.f};
     m_gameObjects.emplace(floorObject.getId(), std::move(floorObject));
- 
+
 
     std::vector<glm::vec3> lightColors{
         {1.f, .1f, .1f},
@@ -156,7 +155,7 @@ void FirstApp::loadGameObjects() {
         {.1f, 1.f, .1f},
         {1.f, 1.f, .1f},
         {.1f, 1.f, 1.f},
-        {1.f, 1.f, 1.f} 
+        {1.f, 1.f, 1.f}
     };
 
     for (int i = 0; i < lightColors.size(); i++) {

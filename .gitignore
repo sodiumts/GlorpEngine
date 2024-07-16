@@ -2,3 +2,5 @@ build/
 .env.cmake
 .vscode/
 shaders/*.spv
+.zed/
+.cache/
