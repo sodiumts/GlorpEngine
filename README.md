@@ -9,15 +9,15 @@ Make sure you have the following tools installed on your system:
 * **CMake** (version 3.29.0 or later)
 ### Platform-specific requirements
 **Windows**
-* **MinGW** (for MinGW Makefile generation) 
-  * Ensure `MINGW_PATH` is set in `.env.cmake`  
+* **MinGW** (for MinGW Makefile generation)
+  * Ensure `MINGW_PATH` is set in `.env.cmake`
 
 **MacOS**
 * **Xcode command line tools**
 ### Libraries
 * **Vulkan SDK**: Make sure Vulkan is installed and `VULKAN_SDK_PATH` is set in `.env.cmake` if using a specific version. Consult [LunarG](https://vulkan.lunarg.com/) for the Vulkan SDK installation.
-* **GLFW**: Also make sure GLFW is installed and `GLFW_PATH` is set in `.env.cmake`.
-* **tinyOBJLoader**: Make sure the project `external/tinyobjloader` directory contains the `tiny_obj_loader.h` header. Or provide your own specific version and specify `TINYOBJ_PATH` in `.env.cmake`.
+* **GLFW**: GLFW should get installed by CMake, if you wish to use a specific version, set `GLFW_PATH` in `.env.cmake`.
+* **tinyOBJLoader**: The git repository containts `tiny_obj_loader.h` header in `external/`. If you wish to provide your own specific version and specify `TINYOBJ_PATH` in `.env.cmake`.
 * **Dear ImGui**: The external folder should contain the git submodule for Dear ImGui.
 ## Environment Setup
 ### .env.cmake
@@ -37,7 +37,7 @@ Make sure you have all the required dependencies installed on your system.
 git clone --recurse-submodules https://github.com/sodiumts/GlorpEngine
 cd GlorpEngine
 ```
-2. Run either `macBuild.sh` or `winBuild.bat` to set up the project and build it (and run it on macOS).
+2. Run either `macBuild.sh` or `winBuild.bat` to set up the project and build it.
 
 **MacOS**:
 ```sh

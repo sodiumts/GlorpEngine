@@ -33,6 +33,8 @@ else()
     message(STATUS "Using Vulkan library at: ${Vulkan_LIBRARIES}")
 endif()
 
+include(FetchContent)
+
 if (DEFINED GLFW_PATH)
     message(STATUS "Using GLFW path specified in .env")
     set(GLFW_INCLUDE_DIRS "${GLFW_PATH}/include")
@@ -44,8 +46,19 @@ if (DEFINED GLFW_PATH)
     endif()
 else()
     find_package(glfw3 3.4 REQUIRED)
-    set(GLFW_LIB glfw)
-    message(STATUS "Found GLFW")
+    if (NOT glfw3_FOUND)
+        message(STATUS "GLFW not found, using FetchContent to download it")
+        FetchContent_Declare(
+            glfw
+            GIT_REPOSITORY https://github.com/glfw/glfw.git
+            GIT_TAG        3.4
+        )
+        FetchContent_MakeAvailable(glfw)
+        set(GLFW_LIB glfw)
+    else()
+        set(GLFW_LIB glfw)
+        message(STATUS "Found GLFW")
+    endif()
 endif()
 
 if (NOT GLFW_LIB)
