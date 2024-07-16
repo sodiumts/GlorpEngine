@@ -48,7 +48,5 @@ class GlorpRenderer {
 
         uint32_t m_currentImageIndex;
         int m_currentFrameIndex = 0;
-        bool m_isFrameStarted;
+        bool m_isFrameStarted = false;
 };
-
-}
