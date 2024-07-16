@@ -3,7 +3,6 @@
 #include "glorp_window.hpp"
 
 // std lib headers
-#include <string>
 #include <vector>
 
 namespace Glorp {
@@ -71,7 +70,8 @@ class GlorpDevice {
       VkMemoryPropertyFlags properties,
       VkImage &image,
       VkDeviceMemory &imageMemory);
-
+  void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
+  void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
   VkPhysicalDeviceProperties properties;
 
  private:
@@ -91,7 +91,7 @@ class GlorpDevice {
   void hasGflwRequiredInstanceExtensions();
   bool checkDeviceExtensionSupport(VkPhysicalDevice device);
   SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
-  
+
  private:
   VkInstance m_instance;
   VkDebugUtilsMessengerEXT m_debugMessenger;
