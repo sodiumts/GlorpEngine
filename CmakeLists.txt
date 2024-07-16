@@ -4,7 +4,11 @@ cmake_minimum_required(VERSION 3.29.0)
 project(GlorpEngine VERSION 0.0.0)
 
 include(./.env.cmake OPTIONAL RESULT_VARIABLE LOCAL_ENV)
-message(STATUS "Local .env.cmake: ${LOCAL_ENV}")
+if (NOT LOCAL_ENV)
+    message(STATUS "Local .env.cmake not found, using default values")
+else()
+    message(STATUS "Local .env.cmake: ${LOCAL_ENV}")
+endif()
 
 
 message(STATUS "Using CMake generator: ${CMAKE_GENERATOR}")
