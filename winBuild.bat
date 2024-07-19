@@ -1,5 +1,7 @@
-if not exist build mkdir build
+rm -rf build
+mkdir build
 cd build
-cmake -DCMAKE_BUILD_TYPE=Debug -S ../ -B . -G "MinGW Makefiles"
-mingw32-make.exe -j && mingw32-make.exe Shaders
+cmake -DCMAKE_BUILD_TYPE=Debug -G "MinGW Makefiles" -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ ..
+mingw32-make.exe -j4
+mingw32-make.exe Shaders
 cd ..
