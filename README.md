@@ -59,5 +59,8 @@ After building, the executable file should be located in the `build` directory w
 
 Pull requests are welcome. For major changes, please open an issue first
 to discuss what you would like to change.
+
+## Credits
+Based on Brendan Galea's [YouTube Series](https://www.youtube.com/@BrendanGalea)
 ## License
 This project is licensed under the [MIT](https://choosealicense.com/licenses/mit/) license.
