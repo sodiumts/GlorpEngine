@@ -137,8 +137,6 @@ elseif (UNIX)
     target_link_libraries(${PROJECT_NAME} glfw ${Vulkan_LIBRARIES})
 endif()
 
-set(SHADERS_DIR "${CMAKE_SOURCE_DIR}/shaders")
-set(MODELS_DIR "${CMAKE_SOURCE_DIR}/models")
 
 target_compile_definitions(GlorpEngine PRIVATE SHADERS_DIR="${SHADERS_DIR}" MODELS_DIR="${MODELS_DIR}")
 

@@ -55,8 +55,8 @@ void SimpleRenderSystem::createPipeline(VkRenderPass renderPass) {
     pipelineConfig.pipelineLayout = m_pipelineLayout;
     m_glorpPipeline = std::make_unique<GlorpPipeline>(
         m_glorpDevice,
-        std::string(SHADERS_DIR) + "/simple_shader.vert.spv",
-        std::string(SHADERS_DIR) + "/simple_shader.frag.spv",
+        "shaders/simple_shader.vert.spv",
+        "shaders/simple_shader.frag.spv",
         pipelineConfig
     );
 }
@@ -90,5 +90,5 @@ void SimpleRenderSystem::renderGameObjects(FrameInfo &frameInfo) {
         obj.model->bind(frameInfo.commandBuffer);
         obj.model->draw(frameInfo.commandBuffer);
     }
-} 
+}
 }

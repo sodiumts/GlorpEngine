@@ -25,8 +25,6 @@
 namespace Glorp {
 
 FirstApp::FirstApp() {
-    m_globalTexture = std::make_shared<Texture>(m_glorpDevice, "textures/missing_texture.png");
-
     globalPool = GlorpDescriptorPool::Builder(m_glorpDevice)
         .setMaxSets(GlorpSwapChain::MAX_FRAMES_IN_FLIGHT)
         .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, GlorpSwapChain::MAX_FRAMES_IN_FLIGHT)
@@ -57,7 +55,7 @@ void FirstApp::run() {
     auto globalSetLayout = GlorpDescriptorSetLayout::Builder(m_glorpDevice)
         .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS)
         .build();
-    
+
     std::vector<VkDescriptorSet> globalDescriptorSets(GlorpSwapChain::MAX_FRAMES_IN_FLIGHT);
     for(int i = 0; i < globalDescriptorSets.size(); i++) {
         auto bufferInfo = uboBuffers[i]->descriptorInfo();
@@ -69,16 +67,16 @@ void FirstApp::run() {
     auto textureSetLayout = GlorpDescriptorSetLayout::Builder(m_glorpDevice)
         .addBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
         .build();
-    
-    for (auto &kv : m_gameObjects) {     
+
+    for (auto &kv : m_gameObjects) {
         auto& obj = kv.second;
-        if(obj.model == nullptr) continue; 
+        if(obj.model == nullptr) continue;
 
         VkDescriptorImageInfo objImageInfo {};
         objImageInfo.sampler = obj.texture->getSampler();
         objImageInfo.imageView = obj.texture->getImageView();
         objImageInfo.imageLayout = obj.texture->getImageLayout();
-        
+
         GlorpDescriptorWriter(*textureSetLayout, *texturePool)
             .writeImage(0, &objImageInfo)
             .build(obj.descriptorSet);
@@ -149,9 +147,11 @@ void FirstApp::run() {
 }
 
 void FirstApp::loadGameObjects() {
+    m_globalTexture = std::make_shared<Texture>(m_glorpDevice, "textures/missing_texture.png");
+
     // std::shared_ptr<GlorpModel> smoothVaseModel = GlorpModel::createModelFromFile(m_glorpDevice, std::string(MODELS_DIR) + "/smooth_vase.obj");
     // std::shared_ptr<GlorpModel> flatVaseModel = GlorpModel::createModelFromFile(m_glorpDevice, std::string(MODELS_DIR) + "/flat_vase.obj");
-    std::shared_ptr<GlorpModel> vikingRoom = GlorpModel::createModelFromFile(m_glorpDevice, std::string(MODELS_DIR) + "/viking_room.obj");
+    std::shared_ptr<GlorpModel> vikingRoom = GlorpModel::createModelFromFile(m_glorpDevice, "models/viking_room.obj");
     auto vikingTexture = std::make_shared<Texture>(m_glorpDevice, "textures/viking_room.png");
 
     createGameObject(vikingRoom, vikingTexture, {.0f, .0f, .0f}, {1.f, 1.f, 1.f});

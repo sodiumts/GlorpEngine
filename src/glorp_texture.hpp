@@ -3,6 +3,7 @@
 #include "glorp_device.hpp"
 #include <string>
 #include "stb_image.h"
+
 namespace Glorp {
 class Texture {
     public:
