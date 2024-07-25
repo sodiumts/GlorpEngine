@@ -59,6 +59,9 @@ void Texture::createImage(const std::string &filepath) {
     int bytesPerPixel;
 
     m_imageData = stbi_load(filepath.c_str(), &m_width, &m_height, &bytesPerPixel, 4);
+    if(m_imageData == NULL) {
+        throw std::runtime_error("Could not load texture: " + filepath);
+    }
 
     m_mipLevels = std::floor(std::log2(std::max(m_width, m_height))) + 1; 
 
