@@ -9,14 +9,14 @@
 
 namespace Glorp {
 
-Texture::Texture(GlorpDevice &device, const std::string &filepath) : m_device {device} {
+GlorpTexture::GlorpTexture(GlorpDevice &device, const std::string &filepath) : m_device {device} {
     createImage(filepath);
     createSampler();
     createImageView();
     generateMipMaps();
 }
 
-void Texture::createSampler() {
+void GlorpTexture::createSampler() {
     VkSamplerCreateInfo samplerInfo {};
     samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
     samplerInfo.magFilter = VK_FILTER_NEAREST;
@@ -36,7 +36,7 @@ void Texture::createSampler() {
     vkCreateSampler(m_device.device(), &samplerInfo, nullptr, &m_sampler);
 }   
 
-void Texture::createImageView() {
+void GlorpTexture::createImageView() {
     VkImageViewCreateInfo imageViewInfo {};
     imageViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
     imageViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
@@ -54,7 +54,7 @@ void Texture::createImageView() {
     stbi_image_free(m_imageData);
 }
 
-void Texture::createImage(const std::string &filepath) {
+void GlorpTexture::createImage(const std::string &filepath) {
     int channels;
     int bytesPerPixel;
 
@@ -99,14 +99,14 @@ void Texture::createImage(const std::string &filepath) {
     m_device.copyBufferToImage(stagingBuffer.getBuffer(), m_image, static_cast<uint32_t>(m_width), static_cast<uint32_t>(m_height), 1);
 }
 
-Texture::~Texture() {
+GlorpTexture::~GlorpTexture() {
     vkDestroyImage(m_device.device(), m_image, nullptr);
     vkFreeMemory(m_device.device(), m_imageMemory, nullptr);
     vkDestroyImageView(m_device.device(), m_imageView, nullptr);
     vkDestroySampler(m_device.device(), m_sampler, nullptr);
 }
 
-void Texture::transitionImageLayout(VkImageLayout oldLayout, VkImageLayout newLayout) {
+void GlorpTexture::transitionImageLayout(VkImageLayout oldLayout, VkImageLayout newLayout) {
     VkCommandBuffer commandBuffer = m_device.beginSingleTimeCommands();
 
     VkImageMemoryBarrier barrier {};
@@ -145,7 +145,7 @@ void Texture::transitionImageLayout(VkImageLayout oldLayout, VkImageLayout newLa
     m_device.endSingleTimeCommands(commandBuffer);
 }
 
-void Texture::generateMipMaps() {
+void GlorpTexture::generateMipMaps() {
     VkFormatProperties formatProperties;
     vkGetPhysicalDeviceFormatProperties(m_device.getPhysicalDevice(), m_imageFormat, &formatProperties);
 
