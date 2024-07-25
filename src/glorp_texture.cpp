@@ -13,6 +13,7 @@ Texture::Texture(GlorpDevice &device, const std::string &filepath) : m_device {d
     createImage(filepath);
     createSampler();
     createImageView();
+    generateMipMaps();
 }
 
 void Texture::createSampler() {
@@ -27,7 +28,7 @@ void Texture::createSampler() {
     samplerInfo.mipLodBias = 0.0f;
     samplerInfo.compareOp = VK_COMPARE_OP_NEVER;
     samplerInfo.minLod = 0.0f;
-    samplerInfo.maxLod = 0.0f;
+    samplerInfo.maxLod = static_cast<uint32_t>(m_mipLevels);
     samplerInfo.anisotropyEnable = VK_TRUE;
     samplerInfo.maxAnisotropy = 4.0;
     samplerInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
@@ -93,12 +94,6 @@ void Texture::createImage(const std::string &filepath) {
     transitionImageLayout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 
     m_device.copyBufferToImage(stagingBuffer.getBuffer(), m_image, static_cast<uint32_t>(m_width), static_cast<uint32_t>(m_height), 1);
-
-    // transitionImageLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-
-    generateMipMaps();
-
-    m_imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 }
 
 Texture::~Texture() {
@@ -217,6 +212,8 @@ void Texture::generateMipMaps() {
     vkCmdPipelineBarrier(commandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
 
     m_device.endSingleTimeCommands(commandBuffer);
+
+    m_imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 }
 
 }

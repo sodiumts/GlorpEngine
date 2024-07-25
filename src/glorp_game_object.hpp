@@ -3,7 +3,7 @@
 #include "glorp_model.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>
-
+#include "glorp_texture.hpp"
 #include <memory>
 #include <unordered_map>
 
@@ -44,7 +44,9 @@ class GlorpGameObject {
 
     glm::vec3 color;
     TransformComponent transform {};
+    VkDescriptorSet descriptorSet;
 
+    std::shared_ptr<Texture> texture;
     std::shared_ptr<GlorpModel> model;
     std::unique_ptr<PointLightComponent> pointLight = nullptr;
     private:

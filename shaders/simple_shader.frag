@@ -6,8 +6,6 @@ layout(location = 1) in vec3 fragPosWorld;
 layout(location = 2) in vec3 fragNormalWorld;
 layout(location = 3) in vec2 fragUV;
 
-
-
 layout(push_constant) uniform Push {
     mat4 modelMatrix; 
     mat4 normalMatrix;
@@ -27,8 +25,7 @@ layout(set = 0, binding = 0) uniform GlobalUbo {
     int numLights;
 } ubo;
 
-layout(set = 0, binding = 1) uniform sampler2D image;
-
+layout(set = 1, binding = 0) uniform sampler2D image;
 
 void main() {
     vec3 specularLight = vec3(0.0);
