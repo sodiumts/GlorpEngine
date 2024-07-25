@@ -45,6 +45,7 @@ class GlorpDevice {
   VkQueue presentQueue() { return m_presentQueue_; }
   VkInstance instance() { return m_instance; }
   VkPhysicalDevice physicalDevice() { return m_physicalDevice; }
+  VkPhysicalDevice getPhysicalDevice() { return m_physicalDevice; }
 
   SwapChainSupportDetails getSwapChainSupport() { return querySwapChainSupport(m_physicalDevice); }
   uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
