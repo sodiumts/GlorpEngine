@@ -1,12 +1,12 @@
 #include "simple_render_system.hpp"
 
 #include <stdexcept>
+#include <iostream>
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 #include <glm/gtc/constants.hpp>
-
 namespace Glorp {
 
 struct SimplePushConstantData {
@@ -14,8 +14,8 @@ struct SimplePushConstantData {
     glm::mat4 normalMatrix{1.f};
 };
 
-SimpleRenderSystem::SimpleRenderSystem(GlorpDevice &device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout): m_glorpDevice{device} {
-    createPipelineLayout(globalSetLayout);
+SimpleRenderSystem::SimpleRenderSystem(GlorpDevice &device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout, VkDescriptorSetLayout textureSetLayout): m_glorpDevice{device} {
+    createPipelineLayout(globalSetLayout, textureSetLayout);
     createPipeline(renderPass);
 }
 SimpleRenderSystem::~SimpleRenderSystem() {
@@ -23,14 +23,14 @@ SimpleRenderSystem::~SimpleRenderSystem() {
 }
 
 
-void SimpleRenderSystem::createPipelineLayout(VkDescriptorSetLayout globalSetLayout) {
+void SimpleRenderSystem::createPipelineLayout(VkDescriptorSetLayout globalSetLayout, VkDescriptorSetLayout textureSetLayout) {
 
     VkPushConstantRange pushConstantRange {};
     pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
     pushConstantRange.offset = 0;
     pushConstantRange.size = sizeof(SimplePushConstantData);
 
-    std::vector<VkDescriptorSetLayout> descriptorSetLayouts{globalSetLayout};
+    std::vector<VkDescriptorSetLayout> descriptorSetLayouts{globalSetLayout, textureSetLayout};
 
 
     VkPipelineLayoutCreateInfo pipelineLayoutInfo {};
@@ -55,33 +55,40 @@ void SimpleRenderSystem::createPipeline(VkRenderPass renderPass) {
     pipelineConfig.pipelineLayout = m_pipelineLayout;
     m_glorpPipeline = std::make_unique<GlorpPipeline>(
         m_glorpDevice,
-        std::string(SHADERS_DIR) + "/simple_shader.vert.spv",
-        std::string(SHADERS_DIR) + "/simple_shader.frag.spv",
+        "shaders/simple_shader.vert.spv",
+        "shaders/simple_shader.frag.spv",
         pipelineConfig
     );
 }
 void SimpleRenderSystem::renderGameObjects(FrameInfo &frameInfo) {
     m_glorpPipeline->bind(frameInfo.commandBuffer);
-
-    vkCmdBindDescriptorSets(
-        frameInfo.commandBuffer,
-        VK_PIPELINE_BIND_POINT_GRAPHICS,
-        m_pipelineLayout,
-        0, 1,
-        &frameInfo.globalDescriptorSet,
-        0, nullptr
-    );
-
-    for(auto &kv : frameInfo.gameObjects) {
+    for (auto &kv : frameInfo.gameObjects) {
         auto& obj = kv.second;
+        if (obj.model == nullptr) continue;
+
+        std::vector<VkDescriptorSet> descriptors{frameInfo.globalDescriptorSet, obj.descriptorSet};
+
+        if (obj.descriptorSet == nullptr) {
+            throw std::runtime_error("Texture descriptorSet was null");
+        }
+
+        vkCmdBindDescriptorSets(
+            frameInfo.commandBuffer,
+            VK_PIPELINE_BIND_POINT_GRAPHICS,
+            m_pipelineLayout,
+            0, descriptors.size(),
+            descriptors.data(),
+            0, nullptr
+        );
+
         SimplePushConstantData push{};
-        if(obj.model == nullptr) continue;
-        push.modelMatrix =  obj.transform.mat4();
+        push.modelMatrix = obj.transform.mat4();
         push.normalMatrix = obj.transform.normalMatrix();
 
         vkCmdPushConstants(frameInfo.commandBuffer, m_pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(SimplePushConstantData), &push);
+
         obj.model->bind(frameInfo.commandBuffer);
         obj.model->draw(frameInfo.commandBuffer);
     }
-};
+}
 }
