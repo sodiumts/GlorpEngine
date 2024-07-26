@@ -50,6 +50,8 @@ if (DEFINED GLFW_PATH)
     endif()
 else()
     find_package(glfw3 3.4 REQUIRED)
+    get_target_property(GLFW_LIB_PATH glfw IMPORTED_LOCATION)
+    message(STATUS "AAAA: ${GLFW_LIBRARY_PATH}")
     if (NOT glfw3_FOUND)
         message(STATUS "GLFW not found, using FetchContent to download it")
         FetchContent_Declare(
@@ -60,7 +62,7 @@ else()
         FetchContent_MakeAvailable(glfw)
         set(GLFW_LIB glfw)
     else()
-        set(GLFW_LIB glfw)
+        set(GLFW_LIB glfw3)
         message(STATUS "Found GLFW")
     endif()
 endif()
@@ -143,6 +145,28 @@ elseif(APPLE)
             MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
             MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION}
             MACOSX_BUNDLE_ICON_FILE glorp.icns
+        )
+
+        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E make_directory
+                "$<TARGET_BUNDLE_DIR:${PROJECT_NAME}>/Contents/Frameworks"
+
+            COMMAND ${CMAKE_COMMAND} -E copy
+                "/opt/homebrew/opt/glfw/lib/libglfw.3.dylib"
+                "$<TARGET_BUNDLE_DIR:${PROJECT_NAME}>/Contents/Frameworks/"
+
+            COMMAND ${CMAKE_COMMAND} -E copy
+                "${Vulkan_LIBRARIES}"
+                "$<TARGET_BUNDLE_DIR:${PROJECT_NAME}>/Contents/Frameworks/"
+
+            COMMAND install_name_tool -add_rpath @executable_path/../Frameworks
+                "$<TARGET_BUNDLE_DIR:${PROJECT_NAME}>/Contents/MacOS/${PROJECT_NAME}"
+
+            COMMAND install_name_tool -change /opt/homebrew/opt/glfw/lib/libglfw.3.dylib @rpath/libglfw.3.dylib
+                "$<TARGET_BUNDLE_DIR:${PROJECT_NAME}>/Contents/MacOS/${PROJECT_NAME}"
+
+            COMMAND install_name_tool -change ${Vulkan_LIBRARIES} @rpath/libvulkan.1.dylib
+                "$<TARGET_BUNDLE_DIR:${PROJECT_NAME}>/Contents/MacOS/${PROJECT_NAME}"
         )
     else()
         message(STATUS "Creating macOS executable")
