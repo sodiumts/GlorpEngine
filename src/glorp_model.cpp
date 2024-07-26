@@ -1,5 +1,6 @@
 #include "glorp_model.hpp"
 
+#include "first_app.hpp"
 #include "glorp_utils.hpp"
 
 #include <cassert>
@@ -50,7 +51,7 @@ void GlorpModel::createVertexBuffers(const std::vector<Vertex> &vertices) {
 
     m_vertexBuffer = std::make_unique<GlorpBuffer>(
         m_glorpDevice,
-        vertexSize, 
+        vertexSize,
         m_vertexCount,
         VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
@@ -66,7 +67,7 @@ void GlorpModel::createIndexBuffers(const std::vector<uint32_t> &indices) {
     if(!m_hasIndexBuffer) {
         return;
     }
-    
+
     VkDeviceSize bufferSize = sizeof(indices[0]) * m_indexCount;
 
     uint32_t indexSize = sizeof(indices[0]);
@@ -97,7 +98,7 @@ void GlorpModel::bind(VkCommandBuffer commandBuffer) {
     VkBuffer buffers[] = {m_vertexBuffer->getBuffer()};
     VkDeviceSize offsets[] = {0};
     vkCmdBindVertexBuffers(commandBuffer, 0, 1, buffers, offsets);
-    
+
     if(m_hasIndexBuffer) {
         vkCmdBindIndexBuffer(commandBuffer, m_indexBuffer->getBuffer(), 0, VK_INDEX_TYPE_UINT32);
     }
@@ -117,7 +118,7 @@ std::vector<VkVertexInputBindingDescription> GlorpModel::Vertex::getBindingDescr
     bindingDescriptions[0].stride = sizeof(Vertex);
     bindingDescriptions[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
     return bindingDescriptions;
-} 
+}
 std::vector<VkVertexInputAttributeDescription> GlorpModel::Vertex::getAttributeDescriptions() {
     std::vector<VkVertexInputAttributeDescription> attributeDescriptions{};
 
@@ -140,7 +141,9 @@ void GlorpModel::Builder::loadModel(const std::string &filepath) {
     std::vector<tinyobj::material_t> materials;
     std::string warn, err;
 
-    if(!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, filepath.c_str())) {
+    auto fullPath = RESOURCE_LOCATIONS + filepath;
+
+    if(!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, fullPath.c_str())) {
         throw std::runtime_error(warn + err);
     }
 
@@ -185,6 +188,6 @@ void GlorpModel::Builder::loadModel(const std::string &filepath) {
             }
             indices.push_back(uniqueVertices[vertex]);
         }
-    }    
+    }
 }
 }

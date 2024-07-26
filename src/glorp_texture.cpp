@@ -1,5 +1,6 @@
 #include "glorp_texture.hpp"
 
+#include "first_app.hpp"
 #include "glorp_buffer.hpp"
 
 #define STB_IMAGE_IMPLEMENTATION
@@ -34,7 +35,7 @@ void Texture::createSampler() {
     samplerInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
 
     vkCreateSampler(m_device.device(), &samplerInfo, nullptr, &m_sampler);
-}   
+}
 
 void Texture::createImageView() {
     VkImageViewCreateInfo imageViewInfo {};
@@ -57,18 +58,19 @@ void Texture::createImageView() {
 void Texture::createImage(const std::string &filepath) {
     int channels;
     int bytesPerPixel;
+    auto fullPath = RESOURCE_LOCATIONS + filepath;
 
-    m_imageData = stbi_load(filepath.c_str(), &m_width, &m_height, &bytesPerPixel, 4);
+    m_imageData = stbi_load(fullPath.c_str(), &m_width, &m_height, &bytesPerPixel, 4);
     if(m_imageData == NULL) {
         throw std::runtime_error("Could not load texture: " + filepath);
     }
 
-    m_mipLevels = std::floor(std::log2(std::max(m_width, m_height))) + 1; 
+    m_mipLevels = std::floor(std::log2(std::max(m_width, m_height))) + 1;
 
-    GlorpBuffer stagingBuffer { 
-        m_device, 
-        4, 
-        static_cast<uint32_t>(m_width * m_height), 
+    GlorpBuffer stagingBuffer {
+        m_device,
+        4,
+        static_cast<uint32_t>(m_width * m_height),
         VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
     };
@@ -188,17 +190,17 @@ void Texture::generateMipMaps() {
         blit.dstOffsets[0] = {0,0,0};
         blit.dstOffsets[1] = {mipWidth > 1 ? mipWidth / 2 : 1, mipHeight > 1 ? mipHeight / 2 : 1, 1};
         blit.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        blit.dstSubresource.mipLevel = i; 
+        blit.dstSubresource.mipLevel = i;
         blit.dstSubresource.baseArrayLayer = 0;
         blit.dstSubresource.layerCount = 1;
-        
+
         vkCmdBlitImage(commandBuffer, m_image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, m_image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &blit, VK_FILTER_LINEAR);
 
         barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
         barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
         barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
         barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-        
+
 
         vkCmdPipelineBarrier(commandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
 

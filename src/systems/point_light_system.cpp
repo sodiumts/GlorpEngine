@@ -79,8 +79,8 @@ void PointLightSystem::createPipeline(VkRenderPass renderPass) {
     pipelineConfig.pipelineLayout = m_pipelineLayout;
     m_glorpPipeline = std::make_unique<GlorpPipeline>(
         m_glorpDevice,
-        "shaders/point_light.vert.spv",
-        "shaders/point_light.frag.spv",
+        std::string(RESOURCE_LOCATIONS) + "shaders/point_light.vert.spv",
+        std::string(RESOURCE_LOCATIONS) + "shaders/point_light.frag.spv",
         pipelineConfig
     );
 }

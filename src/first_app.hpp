@@ -9,6 +9,10 @@
 
 #include <memory>
 
+#ifndef RESOURCE_LOCATIONS
+#define RESOURCE_LOCATIONS ""
+#endif
+
 namespace Glorp {
 class FirstApp {
     public:

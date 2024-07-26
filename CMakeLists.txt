@@ -1,7 +1,7 @@
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 cmake_minimum_required(VERSION 3.29.0)
 
-project(GlorpEngine VERSION 0.0.0)
+project(GlorpEngine VERSION 0.1.0)
 
 include(./.env.cmake OPTIONAL RESULT_VARIABLE LOCAL_ENV)
 if (NOT LOCAL_ENV)
@@ -10,7 +10,7 @@ else()
     message(STATUS "Local .env.cmake: ${LOCAL_ENV}")
 endif()
 
-
+option(BUILD_APP_BUNDLE "Build a macOS app bundle" OFF)
 message(STATUS "Using CMake generator: ${CMAKE_GENERATOR}")
 
 if (CMAKE_GENERATOR STREQUAL "MinGW Makefiles")
@@ -83,11 +83,12 @@ file(GLOB IMGUI_SOURCES
     ${PROJECT_SOURCE_DIR}/external/imgui/backends/imgui_impl_glfw.cpp
 )
 
-add_executable(${PROJECT_NAME} ${SOURCES} ${IMGUI_SOURCES})
 
-target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_23)
 
 if (WIN32)
+    add_executable(${PROJECT_NAME} ${SOURCES} ${IMGUI_SOURCES})
+    target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_23)
+
     message(STATUS "Creating build for Windows")
 
     if (USE_MINGW)
@@ -113,7 +114,50 @@ if (WIN32)
     target_link_libraries(${PROJECT_NAME} glfw3 vulkan-1)
 
 elseif(APPLE)
-    message(STATUS "Creating build for macOS")
+    if(BUILD_APP_BUNDLE)
+        message(STATUS "Creating macOS app bundle")
+        set(RESOURCE_LOCATIONS "Resources/")
+        set(IMAGE_FILE ${PROJECT_SOURCE_DIR}/assets/glorp.icns)
+
+        file(GLOB_RECURSE SHADER_FILES "${PROJECT_SOURCE_DIR}/shaders/*.spv")
+        file(GLOB_RECURSE TEXTURE_FILES "${PROJECT_SOURCE_DIR}/textures/*.png")
+        file(GLOB_RECURSE MODEL_FILES "${PROJECT_SOURCE_DIR}/models/*.obj")
+
+        foreach(file ${SHADER_FILES})
+            set_source_files_properties(${file} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources/shaders")
+        endforeach()
+        foreach(file ${TEXTURE_FILES})
+            set_source_files_properties(${file} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources/textures")
+        endforeach()
+        foreach(file ${MODEL_FILES})
+            set_source_files_properties(${file} PROPERTIES HEADER_FILE_ONLY TRUE MACOSX_PACKAGE_LOCATION "Resources/models")
+        endforeach()
+        set_source_files_properties(${IMAGE_FILE} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
+
+        add_executable(${PROJECT_NAME} MACOSX_BUNDLE ${SOURCES} ${IMGUI_SOURCES} ${SHADER_FILES} ${TEXTURE_FILES} ${MODEL_FILES} "${IMAGE_FILE}")
+        target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_23)
+
+        set_target_properties(${PROJECT_NAME} PROPERTIES
+            MACOSX_BUNDLE_BUNDLE_NAME "${CMAKE_PROJECT_NAME}"
+            MACOSX_BUNDLE_GUI_IDENTIFIER "com.sodiumTsss.glorpEngine"
+            MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
+            MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION}
+            MACOSX_BUNDLE_ICON_FILE glorp.icns
+        )
+    else()
+        message(STATUS "Creating macOS executable")
+        add_executable(${PROJECT_NAME} ${SOURCES} ${IMGUI_SOURCES})
+        target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_23)
+    endif()
+
+
+
+
+
+    # add_executable(${PROJECT_NAME} MACOSX_BUNDLE ${SOURCES} ${IMGUI_SOURCES} ${SHADER_FILES} ${TEXTURE_FILES} ${MODEL_FILES} "${IMAGE_FILE}")
+    # target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_23)
+
+
 
     target_include_directories(${PROJECT_NAME} PUBLIC
         ${PROJECT_SOURCE_DIR}/external

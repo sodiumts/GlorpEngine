@@ -6,8 +6,8 @@
 
 #include <memory>
 
-#ifndef SHADERS_DIR
-#define SHADERS_DIR
+#ifndef RESOURCE_LOCATIONS
+#define RESOURCE_LOCATIONS ""
 #endif
 
 namespace Glorp {
