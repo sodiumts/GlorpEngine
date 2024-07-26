@@ -1,6 +1,8 @@
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 cmake_minimum_required(VERSION 3.29.0)
-
+if(APPLE)
+    set(CMAKE_OSX_DEPLOYMENT_TARGET 14)
+endif()
 project(GlorpEngine VERSION 0.1.0)
 
 include(./.env.cmake OPTIONAL RESULT_VARIABLE LOCAL_ENV)
@@ -116,6 +118,9 @@ if (WIN32)
     target_link_libraries(${PROJECT_NAME} glfw3 vulkan-1)
 
 elseif(APPLE)
+    # message(STATUS "DEPLOYMENT TARGET: ${CMAKE_OSX_DEPLOYMENT_TARGET}")
+
+
     if(BUILD_APP_BUNDLE)
         message(STATUS "Creating macOS app bundle")
         set(RESOURCE_LOCATIONS "Resources/")
