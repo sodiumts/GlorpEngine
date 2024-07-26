@@ -42,9 +42,15 @@ cd GlorpEngine
 2. Run either `macBuild.sh` or `winBuild.bat` to set up the project and build it.
 
 **MacOS**:
+Build and run unix-like binary:
 ```sh
 ./macBuild.sh
 ```
+Build a macOS app bundle:
+```sh
+./macBuild.sh -r
+```
+
 **Windows**:
 ```sh
 ./winBuild.bat
