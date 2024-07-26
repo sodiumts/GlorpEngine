@@ -147,12 +147,16 @@ void FirstApp::run() {
 }
 
 void FirstApp::loadGameObjects() {
-    m_globalTexture = std::make_shared<Texture>(m_glorpDevice, "textures/missing_texture.png");
+    m_globalTexture = std::make_shared<GlorpTexture>(m_glorpDevice, "textures/missing_texture.png");
 
     // std::shared_ptr<GlorpModel> smoothVaseModel = GlorpModel::createModelFromFile(m_glorpDevice, std::string(MODELS_DIR) + "/smooth_vase.obj");
     // std::shared_ptr<GlorpModel> flatVaseModel = GlorpModel::createModelFromFile(m_glorpDevice, std::string(MODELS_DIR) + "/flat_vase.obj");
     std::shared_ptr<GlorpModel> vikingRoom = GlorpModel::createModelFromFile(m_glorpDevice, "models/viking_room.obj");
+<<<<<<< HEAD
     auto vikingTexture = std::make_shared<Texture>(m_glorpDevice,"textures/viking_room.png");
+=======
+    auto vikingTexture = std::make_shared<GlorpTexture>(m_glorpDevice, "textures/viking_room.png");
+>>>>>>> 744b9fe6dd4a43cd0d10e578bea70422789faf97
 
     createGameObject(vikingRoom, vikingTexture, {.0f, .0f, .0f}, {1.f, 1.f, 1.f});
     // createGameObject(smoothVaseModel, nullptr, {1.5f, .5f, 0.f}, {3.f, 1.5f, 3.f});
@@ -175,7 +179,7 @@ void FirstApp::loadGameObjects() {
         m_gameObjects.emplace(pl.getId(), std::move(pl));
     }
 }
-void FirstApp::createGameObject(std::shared_ptr<GlorpModel> model, std::shared_ptr<Texture> texture, glm::vec3 translation, glm::vec3 scale) {
+void FirstApp::createGameObject(std::shared_ptr<GlorpModel> model, std::shared_ptr<GlorpTexture> texture, glm::vec3 translation, glm::vec3 scale) {
     auto gameObj = GlorpGameObject::createGameObject();
     gameObj.model = model;
     gameObj.transform.translation = translation;

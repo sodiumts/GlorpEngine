@@ -5,13 +5,13 @@
 #include "stb_image.h"
 
 namespace Glorp {
-class Texture {
+class GlorpTexture {
     public:
-        Texture(GlorpDevice &device, const std::string &filepath);
-        ~Texture();
+        GlorpTexture(GlorpDevice &device, const std::string &filepath);
+        ~GlorpTexture();
 
-        Texture (const Texture&) = delete;
-        Texture& operator= (const Texture&) = delete;
+        GlorpTexture (const GlorpTexture&) = delete;
+        GlorpTexture& operator= (const GlorpTexture&) = delete;
 
         VkSampler getSampler() { return m_sampler; }
 

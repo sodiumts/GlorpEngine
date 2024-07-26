@@ -46,7 +46,7 @@ class GlorpGameObject {
     TransformComponent transform {};
     VkDescriptorSet descriptorSet;
 
-    std::shared_ptr<Texture> texture;
+    std::shared_ptr<GlorpTexture> texture;
     std::shared_ptr<GlorpModel> model;
     std::unique_ptr<PointLightComponent> pointLight = nullptr;
     private:
