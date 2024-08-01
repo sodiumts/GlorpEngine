@@ -3,6 +3,8 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include <string>
+#include <tuple>
+
 namespace Glorp {
 
 class GlorpWindow {
@@ -19,6 +21,7 @@ class GlorpWindow {
         bool wasWindowResized() { return m_frameBufferResized; }
         void resetWindowResizedFlag() { m_frameBufferResized = false; }
         GLFWwindow* getGLFWwindow() const { return m_window; }
+        std::tuple<int, int> getWidthHeight() { return std::make_tuple(m_height, m_width); }
     private:
         void InitWindow();
         static void frameBufferResizeCallback(GLFWwindow *window, int width, int height);

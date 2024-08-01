@@ -1,8 +1,20 @@
 #include "keyboard_movement_controller.hpp"
+#include <iostream>
+#include <limits>
+#include <GLFW/glfw3.h>
+
+#include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
 
 namespace Glorp {
-    
-void KeyboardMovementController::moveInPlaneXZ(GLFWwindow *window, float dt, GlorpGameObject &gameObject) {
+
+KeyboardMovementController::KeyboardMovementController(GlorpWindow &glorpWindow) 
+    : m_glorpWindow(glorpWindow)
+{ }
+
+void KeyboardMovementController::moveInPlaneXZ(float dt, GlorpGameObject &gameObject) {
+    GLFWwindow *window = m_glorpWindow.getGLFWwindow();
+
     glm::vec3 rotate{0.f};
     if(glfwGetKey(window, keys.lookRight) == GLFW_PRESS) rotate.y += 1.f;
     if(glfwGetKey(window, keys.lookLeft) == GLFW_PRESS) rotate.y -= 1.f;

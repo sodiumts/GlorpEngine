@@ -90,7 +90,7 @@ void FirstApp::run() {
 
     auto viewerObject = GlorpGameObject::createGameObject();
     viewerObject.transform.translation.z = -2.5f;
-    KeyboardMovementController cameraController{};
+    KeyboardMovementController cameraController(m_glorpWindow);
 
 
     auto currentTime = std::chrono::high_resolution_clock::now();
@@ -101,7 +101,7 @@ void FirstApp::run() {
         float frameTime = std::chrono::duration<float, std::chrono::seconds::period>(newTime - currentTime).count();
         currentTime = newTime;
 
-        cameraController.moveInPlaneXZ(m_glorpWindow.getGLFWwindow(), frameTime, viewerObject);
+        cameraController.moveInPlaneXZ(frameTime, viewerObject);
         camera.setViewYXZ(viewerObject.transform.translation, viewerObject.transform.rotation);
         float aspect = m_glorpRenderer.getAspectRatio();
         camera.setPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 1000.f);
