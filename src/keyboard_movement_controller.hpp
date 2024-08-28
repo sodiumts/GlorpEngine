@@ -6,6 +6,7 @@ namespace Glorp {
 
 class KeyboardMovementController {
     public:
+        KeyboardMovementController(GlorpWindow &glorpWindow);
         struct KeyMappings {
             int moveLeft = GLFW_KEY_A;
             int moveRight = GLFW_KEY_D;
@@ -19,10 +20,13 @@ class KeyboardMovementController {
             int lookDown = GLFW_KEY_DOWN;
         };
 
-        void moveInPlaneXZ(GLFWwindow *window, float dt, GlorpGameObject &gameObject);
+        void moveInPlaneXZ(float dt, GlorpGameObject &gameObject);
 
+    private:
         KeyMappings keys{};
         float moveSpeed{3.f};
         float turnSpeed{1.5f};
-};
+        
+        GlorpWindow &m_glorpWindow;
+    };
 }
