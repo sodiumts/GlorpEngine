@@ -1,8 +1,5 @@
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 cmake_minimum_required(VERSION 3.29.0)
-if(APPLE)
-    set(CMAKE_OSX_DEPLOYMENT_TARGET 14)
-endif()
 project(GlorpEngine VERSION 0.1.0)
 
 include(./.env.cmake OPTIONAL RESULT_VARIABLE LOCAL_ENV)
@@ -118,13 +115,24 @@ if (WIN32)
     target_link_libraries(${PROJECT_NAME} glfw3 vulkan-1)
 
 elseif(APPLE)
-    # message(STATUS "DEPLOYMENT TARGET: ${CMAKE_OSX_DEPLOYMENT_TARGET}")
-
+    set(CMAKE_OSX_DEPLOYMENT_TARGET 11)
 
     if(BUILD_APP_BUNDLE)
         message(STATUS "Creating macOS app bundle")
+
+        if (NOT VULKAN_MAC_LOCATION)
+            message(FATAL_ERROR "VULKAN_MAC_LOCATION not set in .env.cmake")
+        endif()
+
+        if (NOT GLFW_MAC_LOCATION)
+            message(FATAL_ERROR "GLFW_MAC_LOCATION not set in .env.cmake")
+        endif()
+        # set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "Minimum macOS deployment target")
+
         set(RESOURCE_LOCATIONS "Resources/")
         set(IMAGE_FILE ${PROJECT_SOURCE_DIR}/assets/glorp.icns)
+        set(INFO_PLIST ${PROJECT_SOURCE_DIR}/assets/Info.plist)
+        set(VULKAN_ICD ${PROJECT_SOURCE_DIR}/assets/MoltenVK_icd.json)
 
         file(GLOB_RECURSE SHADER_FILES "${PROJECT_SOURCE_DIR}/shaders/*.spv")
         file(GLOB_RECURSE TEXTURE_FILES "${PROJECT_SOURCE_DIR}/textures/*.png")
@@ -146,31 +154,44 @@ elseif(APPLE)
 
         set_target_properties(${PROJECT_NAME} PROPERTIES
             MACOSX_BUNDLE_BUNDLE_NAME "${CMAKE_PROJECT_NAME}"
+            OSX_ARCHITECTURES "arm64"
             MACOSX_BUNDLE_GUI_IDENTIFIER "com.sodiumTsss.glorpEngine"
             MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
             MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION}
             MACOSX_BUNDLE_ICON_FILE glorp.icns
+            MACOSX_BUNDLE_INFO_PLIST "${INFO_PLIST}"
         )
 
         add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E make_directory
                 "$<TARGET_BUNDLE_DIR:${PROJECT_NAME}>/Contents/Frameworks"
 
+            COMMAND ${CMAKE_COMMAND} -E make_directory
+                "$<TARGET_BUNDLE_DIR:${PROJECT_NAME}>/Contents/Resources/vulkan/icd.d/"
+
             COMMAND ${CMAKE_COMMAND} -E copy
-                "/opt/homebrew/opt/glfw/lib/libglfw.3.dylib"
+                "${GLFW_MAC_LOCATION}/lib/libglfw.3.dylib"
                 "$<TARGET_BUNDLE_DIR:${PROJECT_NAME}>/Contents/Frameworks/"
 
             COMMAND ${CMAKE_COMMAND} -E copy
-                "${Vulkan_LIBRARIES}"
+                "${VULKAN_ICD}"
+                "$<TARGET_BUNDLE_DIR:${PROJECT_NAME}>/Contents/Resources/vulkan/icd.d/"
+
+            COMMAND ${CMAKE_COMMAND} -E copy
+                "${VULKAN_MAC_LOCATION}/macos/lib/libvulkan.1.dylib"
+                "$<TARGET_BUNDLE_DIR:${PROJECT_NAME}>/Contents/Frameworks/"
+
+            COMMAND ${CMAKE_COMMAND} -E copy
+                "${VULKAN_MAC_LOCATION}/macos/lib/libMoltenVK.dylib"
                 "$<TARGET_BUNDLE_DIR:${PROJECT_NAME}>/Contents/Frameworks/"
 
             COMMAND install_name_tool -add_rpath @executable_path/../Frameworks
                 "$<TARGET_BUNDLE_DIR:${PROJECT_NAME}>/Contents/MacOS/${PROJECT_NAME}"
 
-            COMMAND install_name_tool -change /opt/homebrew/opt/glfw/lib/libglfw.3.dylib @rpath/libglfw.3.dylib
+            COMMAND install_name_tool -change ${GLFW_MAC_LOCATION}/lib/libglfw.3.dylib @rpath/libglfw.3.dylib
                 "$<TARGET_BUNDLE_DIR:${PROJECT_NAME}>/Contents/MacOS/${PROJECT_NAME}"
 
-            COMMAND install_name_tool -change ${Vulkan_LIBRARIES} @rpath/libvulkan.1.dylib
+            COMMAND install_name_tool -change ${VULKAN_MAC_LOCATION}/macos/lib/libvulkan.1.dylib @rpath/libvulkan.1.dylib
                 "$<TARGET_BUNDLE_DIR:${PROJECT_NAME}>/Contents/MacOS/${PROJECT_NAME}"
         )
     else()
@@ -178,15 +199,6 @@ elseif(APPLE)
         add_executable(${PROJECT_NAME} ${SOURCES} ${IMGUI_SOURCES})
         target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_23)
     endif()
-
-
-
-
-
-    # add_executable(${PROJECT_NAME} MACOSX_BUNDLE ${SOURCES} ${IMGUI_SOURCES} ${SHADER_FILES} ${TEXTURE_FILES} ${MODEL_FILES} "${IMAGE_FILE}")
-    # target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_23)
-
-
 
     target_include_directories(${PROJECT_NAME} PUBLIC
         ${PROJECT_SOURCE_DIR}/external

@@ -1,5 +1,5 @@
 # Glorp Engine
-Glorp engine is a Vulkan / GLFW based rendering engine for MacOS and Windows written in C++
+Glorp engine is a Vulkan / GLFW based rendering engine for MacOS with ARM processors and Windows, written in C++
 ![image](https://github.com/user-attachments/assets/599ccd99-398f-498f-baaf-b8c8d033a70b)
 
 *Model and textures created by [nigelgoh](https://sketchfab.com/nigelgoh) [(CC BY 4.0)](https://web.archive.org/web/20200428202538/https://sketchfab.com/3d-models/viking-room-a49f1b8e4f5c4ecf9e1fe7d81915ad38)*
@@ -24,12 +24,17 @@ Make sure you have the following tools installed on your system:
 ## Environment Setup
 ### .env.cmake
 Create a `.env.cmake` file in the project root and specify the necessary dependency paths:
+Example file:
 ```cmake
 # .env.cmake
 set(MINGW_PATH "C:/path/to/mingw")
 set(VULKAN_SDK_PATH "C:/path/to/vulkan")
 set(GLFW_PATH "C:/path/to/glfw")
 set(TINYOBJ_PATH "path/to/tinyobjloader") # Optional if using the included version
+
+# MacOS only (For app bundle creation)
+set(VULKAN_MAC_LOCATION username/VulkanSDK/1.3.283.0)
+set(GLFW_MAC_LOCATION username/Developer/libs/glfw-3.4)
 ```
 
 ## Building The Project
@@ -46,10 +51,11 @@ Build and run unix-like binary:
 ```sh
 ./macBuild.sh
 ```
-Build a macOS app bundle:
+Build a macOS app bundle (must set ``VULKAN_MAC_LOCATION`` and ``GLFW_MAC_LOCATION`` to the appropriate locations in .env.cmake):
 ```sh
 ./macBuild.sh -r
 ```
+*Don't forget to sign your app bundles for distribution!*
 
 **Windows**:
 ```sh
