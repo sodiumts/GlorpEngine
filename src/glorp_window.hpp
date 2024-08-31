@@ -20,6 +20,7 @@ class GlorpWindow {
         VkExtent2D getExtent() { return {static_cast<uint32_t>(m_width), static_cast<uint32_t>(m_height)}; }
         bool wasWindowResized() { return m_frameBufferResized; }
         void resetWindowResizedFlag() { m_frameBufferResized = false; }
+        void toggleFullscreen();
         GLFWwindow* getGLFWwindow() const { return m_window; }
         std::tuple<int, int> getWidthHeight() { return std::make_tuple(m_height, m_width); }
     private:
@@ -31,7 +32,7 @@ class GlorpWindow {
         int m_width;
         bool m_frameBufferResized = false;
 
-        bool fullscreenBorderless = true;
+        bool fullscreen = false;
 
         const std::string m_windowName;
         GLFWwindow *m_window;

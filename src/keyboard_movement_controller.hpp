@@ -18,6 +18,7 @@ class KeyboardMovementController {
             int lookRight = GLFW_KEY_RIGHT;
             int lookUp = GLFW_KEY_UP;
             int lookDown = GLFW_KEY_DOWN;
+            int toggleFullscreen = GLFW_KEY_F11;
         };
 
         void moveInPlaneXZ(float dt, GlorpGameObject &gameObject);
@@ -26,7 +27,7 @@ class KeyboardMovementController {
         KeyMappings keys{};
         float moveSpeed{3.f};
         float turnSpeed{1.5f};
-        
+        bool toggleFullscreenPending = false;
         GlorpWindow &m_glorpWindow;
     };
 }
