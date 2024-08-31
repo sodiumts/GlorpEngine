@@ -59,9 +59,12 @@ void GlorpWindow::toggleFullscreen() {
     if (fullscreen) {
         glfwSetWindowMonitor(m_window, NULL, 0, 0, m_width, m_height, GLFW_DONT_CARE);
         fullscreen = false;
-        glfwSetWindowSize(m_window, m_width, m_height);
+        glfwSetWindowSize(m_window, m_windowedWidth, m_windowedHeight);
+        glfwSetWindowPos(m_window, m_windowedPositionX, m_windowedPositionY);
     } else {
-        glfwGetWindowSize(m_window, &m_width, &m_height);
+        glfwGetWindowSize(m_window, &m_windowedWidth, &m_windowedHeight);
+        glfwGetWindowPos(m_window, &m_windowedPositionX, &m_windowedPositionY);
+
         auto monitor = glfwGetPrimaryMonitor();
         const GLFWvidmode* mode = glfwGetVideoMode(monitor);
         glfwSetWindowMonitor(m_window, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);

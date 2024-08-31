@@ -30,6 +30,12 @@ class GlorpWindow {
     private:
         int m_height;
         int m_width;
+
+        int m_windowedHeight;
+        int m_windowedWidth;
+        int m_windowedPositionX;
+        int m_windowedPositionY;
+
         bool m_frameBufferResized = false;
 
         bool fullscreen = false;
