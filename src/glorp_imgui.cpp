@@ -11,7 +11,6 @@
 namespace Glorp {
 GlorpImgui::GlorpImgui(GlorpDevice &device, VkRenderPass renderPass, GlorpWindow &window) : m_glorpDevice(device), m_glorpWindow(window) {
     initImgui(renderPass);
-    fpsSamples.reserve(m_maxFpsSamples);
 }
 
 GlorpImgui::~GlorpImgui() {
@@ -48,10 +47,10 @@ void GlorpImgui::initImgui(VkRenderPass renderPass) {
 }
 
 void GlorpImgui::drawUI(FrameInfo &frameInfo) {
+    updateFPS();
     ImGui_ImplVulkan_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
-    // ImGui::ShowDemoWindow();
     defaultWindow(frameInfo);
 
     ImGui::Render();
@@ -59,19 +58,30 @@ void GlorpImgui::drawUI(FrameInfo &frameInfo) {
     ImGui_ImplVulkan_RenderDrawData(draw_data, frameInfo.commandBuffer);
 }
 
+void GlorpImgui::updateFPS() {
+    auto currentTime = std::chrono::steady_clock::now();
+    
+    std::chrono::duration<float> duration = currentTime - startTime;
+    m_elapsedTime = duration.count();
+    
+    m_frameCount++;
+    
+    if (m_elapsedTime >= TIME_WINDOW) {
+        float fps = m_frameCount / TIME_WINDOW;
+        
+        m_roundedAverageFPS = static_cast<int>(std::round(fps));
+        
+        m_frameCount = 0;
+        m_elapsedTime = 0.0f;
+        startTime = std::chrono::steady_clock::now();
+    }
+}
+
 void GlorpImgui::defaultWindow(FrameInfo &frameInfo) {
     ImGui::Begin("Debug");
     ImGui::Text("Frame time (ms): %f",frameInfo.frameTime * 1000);
 
-    float fps = 1.0f / frameInfo.frameTime;
-    fpsSamples.push_back(fps);
-    if (fpsSamples.size() > m_maxFpsSamples) {
-        fpsSamples.erase(fpsSamples.begin());
-    }
-    float averageFps = std::accumulate(fpsSamples.begin(), fpsSamples.end(), 0.0f) / fpsSamples.size();
-    int roundedFps = static_cast<int>(std::round(averageFps));
-    ImGui::Text("Frames Per Second: %d", roundedFps);
-
+    ImGui::Text("Frames Per Second: %d", m_roundedAverageFPS);
 
     if(ImGui::CollapsingHeader("Light Control")) {
         ImGui::SliderFloat("Brightness", &m_lightBrightness, 0.0f, 1.0f);

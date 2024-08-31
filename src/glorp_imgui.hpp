@@ -6,6 +6,7 @@
 
 #include <memory>
 #include <vector>
+#include <chrono>
 
 namespace Glorp {
 
@@ -20,6 +21,7 @@ class GlorpImgui {
     private:
         void initImgui(VkRenderPass renderPass);
         void defaultWindow(FrameInfo &frameInfo);
+        void updateFPS();
     private:
         GlorpDevice &m_glorpDevice;
         GlorpWindow &m_glorpWindow;
@@ -27,8 +29,11 @@ class GlorpImgui {
 
         float m_lightBrightness = .5f;
         float m_rotationMultiplier = 1.f;
-        int m_maxFpsSamples = 2000;
-        std::vector<float> fpsSamples;
 
+        int m_roundedAverageFPS = 0;
+        const float TIME_WINDOW = 0.5f;
+        int m_frameCount = 0;
+        float m_elapsedTime = 0.0f;
+        std::chrono::steady_clock::time_point startTime = std::chrono::steady_clock::now();
 };
 }
