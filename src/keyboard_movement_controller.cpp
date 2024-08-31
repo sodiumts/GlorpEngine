@@ -8,14 +8,14 @@
 
 namespace Glorp {
 
-KeyboardMovementController::KeyboardMovementController(GlorpWindow &glorpWindow) 
+KeyboardMovementController::KeyboardMovementController(GlorpWindow &glorpWindow)
     : m_glorpWindow(glorpWindow)
 { }
 
 void KeyboardMovementController::moveInPlaneXZ(float dt, GlorpGameObject &gameObject) {
     GLFWwindow *window = m_glorpWindow.getGLFWwindow();
 
-    
+
 
     glm::vec3 rotate{0.f};
     if(glfwGetKey(window, keys.lookRight) == GLFW_PRESS) rotate.y += 1.f;
@@ -46,16 +46,7 @@ void KeyboardMovementController::moveInPlaneXZ(float dt, GlorpGameObject &gameOb
     if (glm::dot(moveDir, moveDir) > std::numeric_limits<float>::epsilon()) {
         gameObject.transform.translation += moveSpeed * dt * glm::normalize(moveDir);
     }
-    #ifdef APPLE
-    if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS && (glfwGetKey(window, GLFW_KEY_LEFT_SUPER) == GLFW_PRESS)) {
-        if(!toggleFullscreenPending) {
-            m_glorpWindow.toggleFullscreen();
-            toggleFullscreenPending = true;
-        }
-    } else {
-        toggleFullscreenPending = false;
-    }
-    #else
+    #ifndef APPLE
     if (glfwGetKey(window, keys.toggleFullscreen) == GLFW_PRESS) {
         if(!toggleFullscreenPending) {
             m_glorpWindow.toggleFullscreen();
