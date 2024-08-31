@@ -7,6 +7,10 @@
 #include <memory>
 #include <unordered_map>
 
+#ifndef RESOURCE_LOCATIONS
+#define RESOURCE_LOCATIONS ""
+#endif
+
 namespace Glorp {
 struct TransformComponent {
     glm::vec3 translation {};
@@ -30,6 +34,8 @@ class GlorpGameObject {
         static id_t currentId = 0;
         return GlorpGameObject(currentId++);
     }
+
+    static GlorpGameObject createGameObjectFromFileGLTF(GlorpDevice &device, const std::string &filepath);
 
     GlorpGameObject(const GlorpGameObject&) = delete;
     GlorpGameObject &operator=(const GlorpGameObject &) = delete;

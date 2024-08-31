@@ -147,16 +147,11 @@ void FirstApp::run() {
 }
 
 void FirstApp::loadGameObjects() {
-    m_globalTexture = std::make_shared<GlorpTexture>(m_glorpDevice, "textures/missing_texture.png");
 
-    // std::shared_ptr<GlorpModel> smoothVaseModel = GlorpModel::createModelFromFile(m_glorpDevice, std::string(MODELS_DIR) + "/smooth_vase.obj");
-    // std::shared_ptr<GlorpModel> flatVaseModel = GlorpModel::createModelFromFile(m_glorpDevice, std::string(MODELS_DIR) + "/flat_vase.obj");
-    std::shared_ptr<GlorpModel> vikingRoom = GlorpModel::createModelFromFile(m_glorpDevice, "models/viking_room.obj");
-    auto vikingTexture = std::make_shared<GlorpTexture>(m_glorpDevice, "textures/viking_room.png");
-
-    createGameObject(vikingRoom, vikingTexture, {.0f, .0f, .0f}, {1.f, 1.f, 1.f});
-    // createGameObject(smoothVaseModel, nullptr, {1.5f, .5f, 0.f}, {3.f, 1.5f, 3.f});
-    // createGameObject(flatVaseModel, nullptr, {.5f, .5f, 0.f}, {3.f, 1.5f, 3.f});
+    GlorpGameObject gameObject = GlorpGameObject::createGameObjectFromFileGLTF(m_glorpDevice, "models/DamagedHelmet/DamagedHelmet.gltf");
+    gameObject.transform.translation = {.0f, .0f, .0f};
+    gameObject.transform.scale = {1.f, 1.f, 1.f};
+    m_gameObjects.emplace(gameObject.getId(), std::move(gameObject));
 
     std::vector<glm::vec3> lightColors{
         {1.f, .1f, .1f},

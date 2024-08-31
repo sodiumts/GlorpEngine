@@ -129,13 +129,164 @@ std::vector<VkVertexInputAttributeDescription> GlorpModel::Vertex::getAttributeD
 
     return attributeDescriptions;
 }
-std::unique_ptr<GlorpModel> GlorpModel::createModelFromFile(GlorpDevice &device, const std::string &filepath) {
+std::unique_ptr<GlorpModel> GlorpModel::createModelFromOBJ(GlorpDevice &device, const std::string &filepath) {
     Builder builder{};
-    builder.loadModel(filepath);
+    builder.loadModelFromOBJ(filepath);
+    return std::make_unique<GlorpModel>(device, builder);
+}
+std::unique_ptr<GlorpModel> GlorpModel::createModelFromGLTF(GlorpDevice &device, tinygltf::Model &model) {
+    Builder builder{};
+    builder.loadModelFromGLTF(model);
     return std::make_unique<GlorpModel>(device, builder);
 }
 
-void GlorpModel::Builder::loadModel(const std::string &filepath) {
+void GlorpModel::Builder::loadModelFromGLTF(tinygltf::Model &model) {
+    vertices.clear();
+    indices.clear();
+
+    std::unordered_map<Vertex, uint32_t> uniqueVertices;
+
+    for (const auto& mesh : model.meshes) {
+        for (const auto& primitive : mesh.primitives) {
+            // Load vertex positions
+            const auto& positionAccessor = model.accessors.at(primitive.attributes.at("POSITION"));
+            const auto& positionBufferView = model.bufferViews.at(positionAccessor.bufferView);
+            const auto& positionBuffer = model.buffers.at(positionBufferView.buffer);
+            const float* positions = reinterpret_cast<const float*>(&positionBuffer.data[positionBufferView.byteOffset + positionAccessor.byteOffset]);
+
+            // Load normals
+            std::vector<glm::vec3> normals;
+            if (primitive.attributes.count("NORMAL")) {
+                const auto& normalAccessor = model.accessors.at(primitive.attributes.at("NORMAL"));
+                const auto& normalBufferView = model.bufferViews.at(normalAccessor.bufferView);
+                const auto& normalBuffer = model.buffers.at(normalBufferView.buffer);
+                const float* normalData = reinterpret_cast<const float*>(&normalBuffer.data[normalBufferView.byteOffset + normalAccessor.byteOffset]);
+                normals.resize(normalAccessor.count);
+                for (size_t i = 0; i < normalAccessor.count; ++i) {
+                    normals[i] = { normalData[i * 3 + 0], normalData[i * 3 + 1], normalData[i * 3 + 2] };
+                }
+            }
+
+            // Load UVs
+            std::vector<glm::vec2> uvs;
+            if (primitive.attributes.count("TEXCOORD_0")) {
+                const auto& uvAccessor = model.accessors.at(primitive.attributes.at("TEXCOORD_0"));
+                const auto& uvBufferView = model.bufferViews.at(uvAccessor.bufferView);
+                const auto& uvBuffer = model.buffers.at(uvBufferView.buffer);
+                const float* uvData = reinterpret_cast<const float*>(&uvBuffer.data[uvBufferView.byteOffset + uvAccessor.byteOffset]);
+                uvs.resize(uvAccessor.count);
+                for (size_t i = 0; i < uvAccessor.count; ++i) {
+                    uvs[i] = { uvData[i * 2 + 0], uvData[i * 2 + 1] };
+                }
+            }
+
+            // Load Colors
+            std::vector<glm::vec3> colors;
+            if (primitive.attributes.count("COLOR_0")) {
+                const auto& colorAccessor = model.accessors.at(primitive.attributes.at("COLOR_0"));
+                const auto& colorBufferView = model.bufferViews.at(colorAccessor.bufferView);
+                const auto& colorBuffer = model.buffers.at(colorBufferView.buffer);
+                const float* colorData = reinterpret_cast<const float*>(&colorBuffer.data[colorBufferView.byteOffset + colorAccessor.byteOffset]);
+                colors.resize(colorAccessor.count);
+                for (size_t i = 0; i < colorAccessor.count; ++i) {
+                    colors[i] = { colorData[i * 3 + 0], colorData[i * 3 + 1], colorData[i * 3 + 2] };
+                }
+            }
+
+            // Process indices
+            if (primitive.indices > -1) {
+                const auto& indexAccessor = model.accessors.at(primitive.indices);
+                const auto& indexBufferView = model.bufferViews.at(indexAccessor.bufferView);
+                const auto& indexBuffer = model.buffers.at(indexBufferView.buffer);
+                const uint8_t* indexData = &indexBuffer.data[indexBufferView.byteOffset + indexAccessor.byteOffset];
+
+                switch (indexAccessor.componentType) {
+                    case TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE: {
+                        const uint8_t* indicesUByte = reinterpret_cast<const uint8_t*>(indexData);
+                        for (size_t i = 0; i < indexAccessor.count; ++i) {
+                            Vertex vertex{};
+                            vertex.position = {
+                                positions[indicesUByte[i] * 3 + 0],
+                                positions[indicesUByte[i] * 3 + 2],
+                                -positions[indicesUByte[i] * 3 + 1]
+                            };
+                            vertex.normal = vertex.normal = !normals.empty() ? glm::vec3(
+                                    normals[indicesUByte[i]].x,
+                                    normals[indicesUByte[i]].z,
+                                    -normals[indicesUByte[i]].y
+                                ) : glm::vec3(0.0f, 0.0f, 1.0f);
+                            
+                            vertex.uv = !uvs.empty() ? uvs[indicesUByte[i]] : glm::vec2(0.0f, 0.0f);
+                            vertex.color = !colors.empty() ? colors[indicesUByte[i]] : glm::vec3(1.0f, 1.0f, 1.0f);
+
+                            if (uniqueVertices.count(vertex) == 0) {
+                                uniqueVertices[vertex] = static_cast<uint32_t>(vertices.size());
+                                vertices.push_back(vertex);
+                            }
+                            indices.push_back(uniqueVertices[vertex]);
+                        }
+                        break;
+                    }
+                    case TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT: {
+                        const uint16_t* indicesUShort = reinterpret_cast<const uint16_t*>(indexData);
+                        for (size_t i = 0; i < indexAccessor.count; ++i) {
+                            Vertex vertex{};
+                            vertex.position = {
+                                positions[indicesUShort[i] * 3 + 0],
+                                positions[indicesUShort[i] * 3 + 2],
+                                -positions[indicesUShort[i] * 3 + 1]
+                            };
+                            vertex.normal = vertex.normal = !normals.empty() ? glm::vec3(
+                                    normals[indicesUShort[i]].x,
+                                    normals[indicesUShort[i]].z,
+                                    -normals[indicesUShort[i]].y
+                                ) : glm::vec3(0.0f, 0.0f, 1.0f);
+
+                            vertex.uv = !uvs.empty() ? uvs[indicesUShort[i]] : glm::vec2(0.0f, 0.0f);
+                            vertex.color = !colors.empty() ? colors[indicesUShort[i]] : glm::vec3(1.0f, 1.0f, 1.0f);
+
+                            if (uniqueVertices.count(vertex) == 0) {
+                                uniqueVertices[vertex] = static_cast<uint32_t>(vertices.size());
+                                vertices.push_back(vertex);
+                            }
+                            indices.push_back(uniqueVertices[vertex]);
+                        }
+                        break;
+                    }
+                    case TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT: {
+                        const uint32_t* indicesUInt = reinterpret_cast<const uint32_t*>(indexData);
+                        for (size_t i = 0; i < indexAccessor.count; ++i) {
+                            Vertex vertex{};
+                            vertex.position = {
+                                positions[indicesUInt[i] * 3 + 0],
+                                positions[indicesUInt[i] * 3 + 2],
+                                -positions[indicesUInt[i] * 3 + 1]
+                            };
+                            vertex.normal = vertex.normal = !normals.empty() ? glm::vec3(
+                                normals[indicesUInt[i]].x,
+                                normals[indicesUInt[i]].z,
+                                -normals[indicesUInt[i]].y
+                            ) : glm::vec3(0.0f, 0.0f, 1.0f);
+                            vertex.uv = !uvs.empty() ? uvs[indicesUInt[i]] : glm::vec2(0.0f, 0.0f);
+                            vertex.color = !colors.empty() ? colors[indicesUInt[i]] : glm::vec3(1.0f, 1.0f, 1.0f);
+
+                            if (uniqueVertices.count(vertex) == 0) {
+                                uniqueVertices[vertex] = static_cast<uint32_t>(vertices.size());
+                                vertices.push_back(vertex);
+                            }
+                            indices.push_back(uniqueVertices[vertex]);
+                        }
+                        break;
+                    }
+                    default:
+                        throw std::runtime_error("Unsupported index type");
+                }
+            }
+        }
+    }
+}
+
+void GlorpModel::Builder::loadModelFromOBJ(const std::string &filepath) {
     tinyobj::attrib_t attrib;
     std::vector<tinyobj::shape_t> shapes;
     std::vector<tinyobj::material_t> materials;

@@ -2,19 +2,72 @@
 
 #include "first_app.hpp"
 #include "glorp_buffer.hpp"
-
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
+#include <iostream>
 
 #include <stdexcept>
 
 namespace Glorp {
-
-GlorpTexture::GlorpTexture(GlorpDevice &device, const std::string &filepath) : m_device {device} {
-    createImage(filepath);
+GlorpTexture::GlorpTexture(GlorpDevice &device, tinygltf::Model &model) : m_device {device} {
+    createImageGLTF(model);
     createSampler();
     createImageView();
     generateMipMaps();
+}
+
+void GlorpTexture::createImageGLTF(tinygltf::Model &model) {
+    for (const auto& material: model.materials) {
+        if(material.values.find("baseColorTexture") != material.values.end()) { //TODO:: Change to a single image, and make the game object class responsible for loading all of the material textures.
+            const auto& baseColorTexture = material.values.at("baseColorTexture");
+            if(baseColorTexture.TextureIndex() >= 0) {
+                const tinygltf::Texture &texture = model.textures[baseColorTexture.TextureIndex()];
+                const tinygltf::Image &image = model.images[texture.source];
+                std::cout << "Loaded texture: " << image.uri << std::endl;
+                std::cout << "Image size: " << image.image.size() << " bytes" << std::endl;
+                
+                m_width = image.width;
+                m_height = image.height;
+                m_imageFormat = VK_FORMAT_R8G8B8A8_SRGB;
+                if(image.image.empty()) {
+                    throw std::runtime_error("Failed to load texture image data.");
+                }
+
+                m_mipLevels = std::floor(std::log2(std::max(m_width, m_height))) + 1;
+
+                GlorpBuffer stagingBuffer {
+                    m_device,
+                    4,
+                    static_cast<uint32_t>(m_width * m_height),
+                    VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                    VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+                };
+
+                stagingBuffer.map();
+                stagingBuffer.writeToBuffer((void *) image.image.data());
+
+                m_imageFormat = VK_FORMAT_R8G8B8A8_SRGB;
+
+                VkImageCreateInfo imageInfo {};
+                imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+                imageInfo.imageType = VK_IMAGE_TYPE_2D;
+                imageInfo.format = m_imageFormat;
+                imageInfo.mipLevels = m_mipLevels;
+                imageInfo.arrayLayers = 1;
+                imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+                imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+                imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+                imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+                imageInfo.extent = {static_cast<uint32_t>(m_width), static_cast<uint32_t>(m_height), 1};
+                imageInfo.usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+
+
+                m_device.createImageWithInfo(imageInfo, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_image, m_imageMemory);
+
+                transitionImageLayout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+
+                m_device.copyBufferToImage(stagingBuffer.getBuffer(), m_image, static_cast<uint32_t>(m_width), static_cast<uint32_t>(m_height), 1);
+            }
+        }
+    }
 }
 
 void GlorpTexture::createSampler() {
@@ -51,54 +104,6 @@ void GlorpTexture::createImageView() {
     imageViewInfo.image = m_image;
 
     vkCreateImageView(m_device.device(), &imageViewInfo, nullptr, &m_imageView);
-
-    stbi_image_free(m_imageData);
-}
-
-void GlorpTexture::createImage(const std::string &filepath) {
-    int channels;
-    int bytesPerPixel;
-    auto fullPath = RESOURCE_LOCATIONS + filepath;
-
-    m_imageData = stbi_load(fullPath.c_str(), &m_width, &m_height, &bytesPerPixel, 4);
-    if(m_imageData == NULL) {
-        throw std::runtime_error("Could not load texture: " + filepath);
-    }
-
-    m_mipLevels = std::floor(std::log2(std::max(m_width, m_height))) + 1;
-
-    GlorpBuffer stagingBuffer {
-        m_device,
-        4,
-        static_cast<uint32_t>(m_width * m_height),
-        VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
-    };
-
-    stagingBuffer.map();
-    stagingBuffer.writeToBuffer(m_imageData);
-
-    m_imageFormat = VK_FORMAT_R8G8B8A8_SRGB;
-
-    VkImageCreateInfo imageInfo {};
-    imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-    imageInfo.imageType = VK_IMAGE_TYPE_2D;
-    imageInfo.format = m_imageFormat;
-    imageInfo.mipLevels = m_mipLevels;
-    imageInfo.arrayLayers = 1;
-    imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-    imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
-    imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-    imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    imageInfo.extent = {static_cast<uint32_t>(m_width), static_cast<uint32_t>(m_height), 1};
-    imageInfo.usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-
-
-    m_device.createImageWithInfo(imageInfo, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_image, m_imageMemory);
-
-    transitionImageLayout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-
-    m_device.copyBufferToImage(stagingBuffer.getBuffer(), m_image, static_cast<uint32_t>(m_width), static_cast<uint32_t>(m_height), 1);
 }
 
 GlorpTexture::~GlorpTexture() {

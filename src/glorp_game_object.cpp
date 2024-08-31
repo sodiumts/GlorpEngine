@@ -1,5 +1,12 @@
 #include "glorp_game_object.hpp"
 
+#define TINYGLTF_IMPLEMENTATION
+#define STB_IMAGE_IMPLEMENTATION
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "tiny_gltf.h"
+#include <iostream>
+#include <chrono>
+
 namespace Glorp {
 glm::mat4 TransformComponent::mat4() {
     const float c3 = glm::cos(rotation.z);
@@ -56,6 +63,30 @@ glm::mat3 TransformComponent::normalMatrix() {
             invScale.z * (c1 * c2),
         }
     };
+}
+
+GlorpGameObject GlorpGameObject::createGameObjectFromFileGLTF(GlorpDevice &device, const std::string &filepath) {
+    auto fullPath = RESOURCE_LOCATIONS + filepath;
+    tinygltf::Model gltfModel;
+    tinygltf::TinyGLTF loader;
+    std::string err;
+    std::string warn;
+    auto start = std::chrono::high_resolution_clock::now();
+    bool res = loader.LoadASCIIFromFile(&gltfModel, &err, &warn, filepath);
+    if(!warn.empty()) {
+        std::cout << "Warning from loading gltf file: " << warn << std::endl;
+    }
+    if(!err.empty()) {
+        std::cout << "Error loading gltf file: " << err << std::endl;
+    }
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> duration = end - start;
+    std::cout << "Time taken to load gltf file " << filepath << ": " << duration.count() << " seconds" << std::endl;
+
+    GlorpGameObject gameObject = GlorpGameObject::createGameObject();
+    gameObject.model = GlorpModel::createModelFromGLTF(device, gltfModel);
+    gameObject.texture = std::make_shared<GlorpTexture>(device, gltfModel);
+    return gameObject;
 }
 
 GlorpGameObject GlorpGameObject::makePointLight(float intensity, float radius, glm::vec3 color) {
