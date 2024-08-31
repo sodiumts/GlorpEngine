@@ -31,6 +31,8 @@ class GlorpWindow {
         int m_width;
         bool m_frameBufferResized = false;
 
+        bool fullscreenBorderless = true;
+
         const std::string m_windowName;
         GLFWwindow *m_window;
 };

@@ -1,6 +1,7 @@
 #include "glorp_window.hpp"
 
 #include <stdexcept>
+#include <iostream>
 namespace Glorp {
 
 GlorpWindow::GlorpWindow(int width, int height, const std::string windowName)  :m_width(width), m_height(height), m_windowName(windowName)
@@ -13,13 +14,29 @@ GlorpWindow::~GlorpWindow()
     glfwDestroyWindow(m_window);
     glfwTerminate();
 }
-
+void error_callback(int error, const char* description) {
+    std::cerr << "Error: " << description << std::endl;
+}
 void GlorpWindow::InitWindow() {
-    glfwInit();
+    glfwSetErrorCallback(error_callback);
+    if (!glfwInit()) {
+        std::cerr << "Failed to initialize GLFW" << std::endl;
+    }
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
     
-    m_window = glfwCreateWindow(m_width, m_height, m_windowName.c_str(), nullptr, nullptr);
+    if(fullscreenBorderless) {
+        GLFWmonitor* primary = glfwGetPrimaryMonitor();
+        const GLFWvidmode* mode = glfwGetVideoMode(primary);
+    
+        glfwWindowHint(GLFW_RED_BITS, mode->redBits);
+        glfwWindowHint(GLFW_GREEN_BITS, mode->greenBits);
+        glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
+        glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
+        m_window = glfwCreateWindow(mode->width, mode->height, m_windowName.c_str(), primary, NULL);
+    } else {
+        glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
+        m_window = glfwCreateWindow(m_width, m_height, m_windowName.c_str(), nullptr, nullptr);
+    }
 
     glfwSetWindowUserPointer(m_window, this);
     glfwSetFramebufferSizeCallback(m_window, frameBufferResizeCallback);
