@@ -50,7 +50,6 @@ if (DEFINED GLFW_PATH)
 else()
     find_package(glfw3 3.4 REQUIRED)
     get_target_property(GLFW_LIB_PATH glfw IMPORTED_LOCATION)
-    message(STATUS "AAAA: ${GLFW_LIBRARY_PATH}")
     if (NOT glfw3_FOUND)
         message(STATUS "GLFW not found, using FetchContent to download it")
         FetchContent_Declare(
