@@ -1,8 +1,17 @@
 # Glorp Engine
 Glorp engine is a Vulkan / GLFW based rendering engine for MacOS with ARM processors and Windows, written in C++
-![image](https://github.com/user-attachments/assets/599ccd99-398f-498f-baaf-b8c8d033a70b)
+![image](https://github.com/user-attachments/assets/f7aa9675-3040-493c-9952-fe8df2e919c3)
 
-*Model and textures created by [nigelgoh](https://sketchfab.com/nigelgoh) [(CC BY 4.0)](https://web.archive.org/web/20200428202538/https://sketchfab.com/3d-models/viking-room-a49f1b8e4f5c4ecf9e1fe7d81915ad38)*
+*Model credits:*  
+Source : https://github.com/KhronosGroup/glTF-Sample-Assets/tree/main/Models/DamagedHelmet  
+&copy; 2018, ctxwing. [CC BY 4.0 International](https://creativecommons.org/licenses/by/4.0/legalcode)
+
+ - ctxwing for Rebuild and conversion to glTF
+
+&copy; 2016, theblueturtle_. [CC BY-NC 4.0 International](https://creativecommons.org/licenses/by-nc/4.0/legalcode)
+
+ - theblueturtle_ for Earlier version of model
+
 ## Prerequisites For Building
 
 **Clone the repository using with recurse submodules**
