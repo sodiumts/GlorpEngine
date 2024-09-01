@@ -22,15 +22,17 @@ class GlorpModel {
           glm::vec3 color {};
           glm::vec3 normal {};
           glm::vec2 uv {};
+          glm::vec3 tangent {};
+          glm::vec3 bitangent {};
 
-          static std::vector<VkVertexInputBindingDescription> getBindingDescriptions(); 
-          static std::vector<VkVertexInputAttributeDescription> getAttributeDescriptions(); 
+          static std::vector<VkVertexInputBindingDescription> getBindingDescriptions();
+          static std::vector<VkVertexInputAttributeDescription> getAttributeDescriptions();
 
           bool operator==(const Vertex &other) const {
             return position == other.position && color == other.color && normal == other.normal && uv == other.uv;
           }
         };
-        
+
         struct Builder {
             std::vector<Vertex> vertices{};
             std::vector<uint32_t> indices{};
@@ -38,7 +40,7 @@ class GlorpModel {
             void loadModelFromOBJ(const std::string &filepath);
             void loadModelFromGLTF(tinygltf::Model &model);
         };
-        
+
         GlorpModel(GlorpDevice &device, const GlorpModel::Builder &builder);
         ~GlorpModel();
 
@@ -63,6 +65,6 @@ class GlorpModel {
 
         bool m_hasIndexBuffer = false;
         std::unique_ptr<GlorpBuffer> m_indexBuffer;
-        uint32_t m_indexCount; 
+        uint32_t m_indexCount;
 };
 }

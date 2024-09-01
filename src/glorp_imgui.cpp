@@ -25,7 +25,7 @@ void GlorpImgui::initImgui(VkRenderPass renderPass) {
         .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1)
         .setPoolFlags(VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT)
         .build();
-        
+
     ImGui::CreateContext();
 
     ImGui_ImplGlfw_InitForVulkan(m_glorpWindow.getGLFWwindow(), true);
@@ -60,17 +60,17 @@ void GlorpImgui::drawUI(FrameInfo &frameInfo) {
 
 void GlorpImgui::updateFPS() {
     auto currentTime = std::chrono::steady_clock::now();
-    
+
     std::chrono::duration<float> duration = currentTime - startTime;
     m_elapsedTime = duration.count();
-    
+
     m_frameCount++;
-    
+
     if (m_elapsedTime >= TIME_WINDOW) {
         float fps = m_frameCount / TIME_WINDOW;
-        
+
         m_roundedAverageFPS = static_cast<int>(std::round(fps));
-        
+
         m_frameCount = 0;
         m_elapsedTime = 0.0f;
         startTime = std::chrono::steady_clock::now();
@@ -87,7 +87,13 @@ void GlorpImgui::defaultWindow(FrameInfo &frameInfo) {
         ImGui::SliderFloat("Brightness", &m_lightBrightness, 0.0f, 1.0f);
         ImGui::SliderFloat("Rotation Multiplier", &m_rotationMultiplier, 0.0f, 10.f);
     }
-    
+    if(ImGui::CollapsingHeader("Texture Control")) {
+        ImGui::Checkbox("Use Albedo", &useAlbedoMap);
+        ImGui::Checkbox("Use Normal", &useNormalMap);
+        ImGui::Checkbox("Use Emmisive", &useEmissiveMap);
+        ImGui::Checkbox("Use AO", &useAOMap);
+    }
+
     ImGui::End();
 }
 }

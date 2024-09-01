@@ -7,10 +7,8 @@
 #include "glorp_camera.hpp"
 #include "keyboard_movement_controller.hpp"
 #include "glorp_buffer.hpp"
-#include "glorp_texture.hpp"
 
 #include <chrono>
-#include <iostream>
 #include <cassert>
 
 #define GLM_FORCE_RADIANS
@@ -33,7 +31,7 @@ FirstApp::FirstApp() {
     loadGameObjects();
 
     texturePool = GlorpDescriptorPool::Builder(m_glorpDevice)
-        .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, GlorpSwapChain::MAX_FRAMES_IN_FLIGHT * m_gameObjects.size())
+        .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, GlorpSwapChain::MAX_FRAMES_IN_FLIGHT * 4 * m_gameObjects.size())
         .build();
 }
 FirstApp::~FirstApp() {}
@@ -65,22 +63,46 @@ void FirstApp::run() {
     }
 
     auto textureSetLayout = GlorpDescriptorSetLayout::Builder(m_glorpDevice)
-        .addBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
+        .addBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT) // Albedo
+        .addBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT) // Normal Map
+        .addBinding(2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT) // Emissive Map
+        .addBinding(3, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT) // AO Map
         .build();
 
     for (auto &kv : m_gameObjects) {
         auto& obj = kv.second;
-        if(obj.model == nullptr) continue;
+        if (obj.model == nullptr) continue;
+        if (obj.material == nullptr) continue;
 
-        VkDescriptorImageInfo objImageInfo {};
-        objImageInfo.sampler = obj.texture->getSampler();
-        objImageInfo.imageView = obj.texture->getImageView();
-        objImageInfo.imageLayout = obj.texture->getImageLayout();
+        // auto& material = obj.material;
+        VkDescriptorImageInfo albedoImageInfo {};
+        albedoImageInfo.sampler = obj.material->albedoTexture->getSampler();
+        albedoImageInfo.imageView = obj.material->albedoTexture->getImageView();
+        albedoImageInfo.imageLayout = obj.material->albedoTexture->getImageLayout();
+
+        VkDescriptorImageInfo normalImageInfo {};
+        normalImageInfo.sampler = obj.material->normalTexture->getSampler();
+        normalImageInfo.imageView = obj.material->normalTexture->getImageView();
+        normalImageInfo.imageLayout = obj.material->normalTexture->getImageLayout();
+
+        VkDescriptorImageInfo emissiveImageInfo {};
+        emissiveImageInfo.sampler = obj.material->emissiveTexture->getSampler();
+        emissiveImageInfo.imageView = obj.material->emissiveTexture->getImageView();
+        emissiveImageInfo.imageLayout = obj.material->emissiveTexture->getImageLayout();
+
+        VkDescriptorImageInfo aoImageInfo {};
+        aoImageInfo.sampler = obj.material->aoTexture->getSampler();
+        aoImageInfo.imageView = obj.material->aoTexture->getImageView();
+        aoImageInfo.imageLayout = obj.material->aoTexture->getImageLayout();
 
         GlorpDescriptorWriter(*textureSetLayout, *texturePool)
-            .writeImage(0, &objImageInfo)
+            .writeImage(0, &albedoImageInfo)
+            .writeImage(1, &normalImageInfo)
+            .writeImage(2, &emissiveImageInfo)
+            .writeImage(3, &aoImageInfo)
             .build(obj.descriptorSet);
     }
+
 
     SimpleRenderSystem simpleRenderSystem{m_glorpDevice, m_glorpRenderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout(), textureSetLayout->getDescriptorSetLayout()};
     PointLightSystem pointLightSystem{m_glorpDevice, m_glorpRenderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout()};
@@ -118,7 +140,11 @@ void FirstApp::run() {
                 globalDescriptorSets[frameIndex],
                 m_gameObjects,
                 glorpImgui.getLightIntensity(),
-                glorpImgui.getRotationMultiplier()
+                glorpImgui.getRotationMultiplier(),
+                glorpImgui.useNormalMap,
+                glorpImgui.useAlbedoMap,
+                glorpImgui.useEmissiveMap,
+                glorpImgui.useAOMap
             };
             //update
             GlobalUbo ubo{};
@@ -148,10 +174,10 @@ void FirstApp::run() {
 
 void FirstApp::loadGameObjects() {
 
-    GlorpGameObject gameObject = GlorpGameObject::createGameObjectFromFileGLTF(m_glorpDevice, "models/DamagedHelmet/DamagedHelmet.gltf");
-    gameObject.transform.translation = {.0f, .0f, .0f};
-    gameObject.transform.scale = {1.f, 1.f, 1.f};
-    m_gameObjects.emplace(gameObject.getId(), std::move(gameObject));
+    GlorpGameObject helmet = GlorpGameObject::createGameObjectFromAscii(m_glorpDevice, "models/DamagedHelmet/DamagedHelmet.gltf");
+    helmet.transform.translation = {1.5f, .0f, .0f};
+    helmet.transform.scale = {1.f, 1.f, 1.f};
+    m_gameObjects.emplace(helmet.getId(), std::move(helmet));
 
     std::vector<glm::vec3> lightColors{
         {1.f, .1f, .1f},
@@ -170,14 +196,4 @@ void FirstApp::loadGameObjects() {
         m_gameObjects.emplace(pl.getId(), std::move(pl));
     }
 }
-void FirstApp::createGameObject(std::shared_ptr<GlorpModel> model, std::shared_ptr<GlorpTexture> texture, glm::vec3 translation, glm::vec3 scale) {
-    auto gameObj = GlorpGameObject::createGameObject();
-    gameObj.model = model;
-    gameObj.transform.translation = translation;
-    gameObj.transform.scale = scale;
-
-    gameObj.texture = texture ? texture : m_globalTexture;
-    m_gameObjects.emplace(gameObj.getId(), std::move(gameObj));
-}
-
 }

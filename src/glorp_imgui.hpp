@@ -5,7 +5,6 @@
 #include "glorp_descriptors.hpp"
 
 #include <memory>
-#include <vector>
 #include <chrono>
 
 namespace Glorp {
@@ -18,6 +17,11 @@ class GlorpImgui {
         void drawUI(FrameInfo &frameInfo);
         float getLightIntensity() { return m_lightBrightness; }
         float getRotationMultiplier() { return m_rotationMultiplier; }
+
+        bool useNormalMap{true};
+        bool useAlbedoMap{true};
+        bool useEmissiveMap{true};
+        bool useAOMap{true};
     private:
         void initImgui(VkRenderPass renderPass);
         void defaultWindow(FrameInfo &frameInfo);

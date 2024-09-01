@@ -25,6 +25,13 @@ struct PointLightComponent {
     float lightIntensity = 1.0f;
 };
 
+struct MaterialComponent {
+    std::shared_ptr<GlorpTexture> albedoTexture;
+    std::shared_ptr<GlorpTexture> aoTexture;
+    std::shared_ptr<GlorpTexture> emissiveTexture;
+    std::shared_ptr<GlorpTexture> normalTexture;
+};
+
 class GlorpGameObject {
     public:
     using id_t = unsigned int;
@@ -35,7 +42,8 @@ class GlorpGameObject {
         return GlorpGameObject(currentId++);
     }
 
-    static GlorpGameObject createGameObjectFromFileGLTF(GlorpDevice &device, const std::string &filepath);
+    static GlorpGameObject createGameObjectFromAscii(GlorpDevice &device, const std::string &filepath);
+    static GlorpGameObject createGameObjectFromBin(GlorpDevice &device, const std::string &filepath);
 
     GlorpGameObject(const GlorpGameObject&) = delete;
     GlorpGameObject &operator=(const GlorpGameObject &) = delete;
@@ -52,12 +60,13 @@ class GlorpGameObject {
     TransformComponent transform {};
     VkDescriptorSet descriptorSet;
 
-    std::shared_ptr<GlorpTexture> texture;
     std::shared_ptr<GlorpModel> model;
     std::unique_ptr<PointLightComponent> pointLight = nullptr;
+    std::unique_ptr<MaterialComponent> material = nullptr;
     private:
-    GlorpGameObject(id_t objId) : id {objId} {}; 
-    id_t id;
+        GlorpGameObject(id_t objId) : id {objId} {};
+        static void assembleGameObject(GlorpDevice &device, GlorpGameObject &gameObject, tinygltf::Model &gltfModel);
+        id_t id;
 
 };
 }

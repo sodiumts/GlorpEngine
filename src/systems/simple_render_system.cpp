@@ -1,7 +1,7 @@
 #include "simple_render_system.hpp"
 
 #include <stdexcept>
-#include <iostream>
+
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -12,6 +12,7 @@ namespace Glorp {
 struct SimplePushConstantData {
     glm::mat4 modelMatrix{1.f};
     glm::mat4 normalMatrix{1.f};
+    glm::vec4 useMaps {1.f};
 };
 
 SimpleRenderSystem::SimpleRenderSystem(GlorpDevice &device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout, VkDescriptorSetLayout textureSetLayout): m_glorpDevice{device} {
@@ -68,10 +69,6 @@ void SimpleRenderSystem::renderGameObjects(FrameInfo &frameInfo) {
 
         std::vector<VkDescriptorSet> descriptors{frameInfo.globalDescriptorSet, obj.descriptorSet};
 
-        if (obj.descriptorSet == nullptr) {
-            throw std::runtime_error("Texture descriptorSet was null");
-        }
-
         vkCmdBindDescriptorSets(
             frameInfo.commandBuffer,
             VK_PIPELINE_BIND_POINT_GRAPHICS,
@@ -84,6 +81,7 @@ void SimpleRenderSystem::renderGameObjects(FrameInfo &frameInfo) {
         SimplePushConstantData push{};
         push.modelMatrix = obj.transform.mat4();
         push.normalMatrix = obj.transform.normalMatrix();
+        push.useMaps = {frameInfo.useNormalMap, frameInfo.useAlbedoMap, frameInfo.useEmissiveMap, frameInfo.useAOMap};
 
         vkCmdPushConstants(frameInfo.commandBuffer, m_pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(SimplePushConstantData), &push);
 

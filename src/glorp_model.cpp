@@ -31,6 +31,52 @@ GlorpModel::GlorpModel(GlorpDevice &device,const GlorpModel::Builder &builder) :
 }
 GlorpModel::~GlorpModel() {}
 
+void computeTangentsAndBitangents(std::vector<GlorpModel::Vertex>& vertices, std::vector<uint32_t>& indices) {
+    std::vector<glm::vec3> tangents(vertices.size(), glm::vec3(0.0f));
+    std::vector<glm::vec3> bitangents(vertices.size(), glm::vec3(0.0f));
+
+    for (size_t i = 0; i < indices.size(); i += 3) {
+        uint32_t idx0 = indices[i];
+        uint32_t idx1 = indices[i + 1];
+        uint32_t idx2 = indices[i + 2];
+
+        const auto& v0 = vertices[idx0];
+        const auto& v1 = vertices[idx1];
+        const auto& v2 = vertices[idx2];
+
+        glm::vec3 edge1 = v1.position - v0.position;
+        glm::vec3 edge2 = v2.position - v0.position;
+
+        glm::vec2 deltaUV1 = v1.uv - v0.uv;
+        glm::vec2 deltaUV2 = v2.uv - v0.uv;
+
+        float f = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
+
+        glm::vec3 tangent;
+        tangent.x = f * (deltaUV2.y * edge1.x - deltaUV1.y * edge2.x);
+        tangent.y = f * (deltaUV2.y * edge1.y - deltaUV1.y * edge2.y);
+        tangent.z = f * (deltaUV2.y * edge1.z - deltaUV1.y * edge2.z);
+
+        glm::vec3 bitangent;
+        bitangent.x = f * (-deltaUV2.x * edge1.x + deltaUV1.x * edge2.x);
+        bitangent.y = f * (-deltaUV2.x * edge1.y + deltaUV1.x * edge2.y);
+        bitangent.z = f * (-deltaUV2.x * edge1.z + deltaUV1.x * edge2.z);
+
+        tangents[idx0] += tangent;
+        tangents[idx1] += tangent;
+        tangents[idx2] += tangent;
+
+        bitangents[idx0] += bitangent;
+        bitangents[idx1] += bitangent;
+        bitangents[idx2] += bitangent;
+    }
+
+    for (size_t i = 0; i < vertices.size(); ++i) {
+        vertices[i].tangent = glm::normalize(tangents[i]);
+        vertices[i].bitangent = glm::normalize(bitangents[i]);
+    }
+}
+
 void GlorpModel::createVertexBuffers(const std::vector<Vertex> &vertices) {
     m_vertexCount = static_cast<uint32_t>(vertices.size());
     assert(m_vertexCount >= 3 && "Vertex count must be at least 3");
@@ -126,6 +172,8 @@ std::vector<VkVertexInputAttributeDescription> GlorpModel::Vertex::getAttributeD
     attributeDescriptions.push_back({1,0,VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, color)});
     attributeDescriptions.push_back({2,0,VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, normal)});
     attributeDescriptions.push_back({3,0,VK_FORMAT_R32G32_SFLOAT, offsetof(Vertex, uv)});
+    attributeDescriptions.push_back({4,0,VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, tangent)});
+    attributeDescriptions.push_back({5,0,VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, bitangent)});
 
     return attributeDescriptions;
 }
@@ -137,6 +185,7 @@ std::unique_ptr<GlorpModel> GlorpModel::createModelFromOBJ(GlorpDevice &device, 
 std::unique_ptr<GlorpModel> GlorpModel::createModelFromGLTF(GlorpDevice &device, tinygltf::Model &model) {
     Builder builder{};
     builder.loadModelFromGLTF(model);
+
     return std::make_unique<GlorpModel>(device, builder);
 }
 
@@ -215,7 +264,7 @@ void GlorpModel::Builder::loadModelFromGLTF(tinygltf::Model &model) {
                                     normals[indicesUByte[i]].z,
                                     -normals[indicesUByte[i]].y
                                 ) : glm::vec3(0.0f, 0.0f, 1.0f);
-                            
+
                             vertex.uv = !uvs.empty() ? uvs[indicesUByte[i]] : glm::vec2(0.0f, 0.0f);
                             vertex.color = !colors.empty() ? colors[indicesUByte[i]] : glm::vec3(1.0f, 1.0f, 1.0f);
 
@@ -284,6 +333,7 @@ void GlorpModel::Builder::loadModelFromGLTF(tinygltf::Model &model) {
             }
         }
     }
+    computeTangentsAndBitangents(vertices, indices);
 }
 
 void GlorpModel::Builder::loadModelFromOBJ(const std::string &filepath) {

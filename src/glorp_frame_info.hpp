@@ -8,7 +8,7 @@
 namespace Glorp {
 
 #define MAX_LIGHTS 10
-    
+
 struct PointLight {
     glm::vec4 position{};
     glm::vec4 color{};
@@ -32,6 +32,11 @@ struct FrameInfo {
     GlorpGameObject::Map &gameObjects;
     float lightIntensity;
     float lightRotationMultiplier;
+
+    bool useNormalMap{true};
+    bool useAlbedoMap{true};
+    bool useEmissiveMap{true};
+    bool useAOMap{true};
 };
 
 }

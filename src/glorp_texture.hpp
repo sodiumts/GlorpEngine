@@ -1,15 +1,14 @@
 #pragma once
 
 #include "glorp_device.hpp"
-#include <string>
+
 
 #include "tiny_gltf.h"
 
 namespace Glorp {
 class GlorpTexture {
     public:
-        GlorpTexture(GlorpDevice &device, tinygltf::Model &model);
-
+        GlorpTexture(GlorpDevice &device, const tinygltf::Image &image);
         ~GlorpTexture();
 
         GlorpTexture (const GlorpTexture&) = delete;
@@ -25,7 +24,7 @@ class GlorpTexture {
         void createImageView();
         void generateMipMaps();
 
-        void createImageGLTF(tinygltf::Model &model);
+        void createImageGLTF(const tinygltf::Image &image);
     private:
 
         int m_height, m_width, m_mipLevels;
