@@ -1,6 +1,6 @@
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 cmake_minimum_required(VERSION 3.29.0)
-project(GlorpEngine VERSION 0.1.0)
+project(GlorpEngine VERSION 0.2.0)
 
 include(./.env.cmake OPTIONAL RESULT_VARIABLE LOCAL_ENV)
 if (NOT LOCAL_ENV)
@@ -128,18 +128,17 @@ elseif(APPLE)
         set(VULKAN_ICD ${PROJECT_SOURCE_DIR}/assets/MoltenVK_icd.json)
 
         file(GLOB_RECURSE SHADER_FILES "${PROJECT_SOURCE_DIR}/shaders/*.spv")
-        file(GLOB_RECURSE TEXTURE_FILES "${PROJECT_SOURCE_DIR}/textures/*.png")
-        file(GLOB_RECURSE MODEL_FILES "${PROJECT_SOURCE_DIR}/models/*.obj")
+        file(GLOB_RECURSE MODEL_FILES "${PROJECT_SOURCE_DIR}/models/*")
 
         foreach(file ${SHADER_FILES})
             set_source_files_properties(${file} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources/shaders")
         endforeach()
-        foreach(file ${TEXTURE_FILES})
-            set_source_files_properties(${file} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources/textures")
-        endforeach()
-        foreach(file ${MODEL_FILES})
-            set_source_files_properties(${file} PROPERTIES HEADER_FILE_ONLY TRUE MACOSX_PACKAGE_LOCATION "Resources/models")
-        endforeach()
+        # foreach(file ${MODEL_FILES})
+        #     get_filename_component(file_dir "${file}" DIRECTORY)
+        #     string(REPLACE "${PROJECT_SOURCE_DIR}/models" "" relative_path "${file}")
+        #     message(STATUS "Adding model: ${relative_path}")
+        #     set_source_files_properties(${file} PROPERTIES HEADER_FILE_ONLY TRUE MACOSX_PACKAGE_LOCATION "Resources/models${relative_path}")
+        # endforeach()
         set_source_files_properties(${IMAGE_FILE} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
 
         add_executable(${PROJECT_NAME} MACOSX_BUNDLE ${SOURCES} ${IMGUI_SOURCES} ${SHADER_FILES} ${TEXTURE_FILES} ${MODEL_FILES} "${IMAGE_FILE}")
@@ -187,6 +186,30 @@ elseif(APPLE)
             COMMAND install_name_tool -change ${VULKAN_MAC_LOCATION}/macos/lib/libvulkan.1.dylib @rpath/libvulkan.1.dylib
                 "$<TARGET_BUNDLE_DIR:${PROJECT_NAME}>/Contents/MacOS/${PROJECT_NAME}"
         )
+
+        set(DEST_DIR "${CMAKE_BINARY_DIR}/${CMAKE_PROJECT_NAME}.app/Contents/Resources/models")
+        set(SOURCE_DIR "${PROJECT_SOURCE_DIR}/models")
+        file(GLOB_RECURSE MODEL_FILES "${PROJECT_SOURCE_DIR}/models/*")
+
+        foreach(file ${MODEL_FILES})
+            # Get the relative path of the file with respect to the source directory
+            string(REPLACE "${SOURCE_DIR}/" "" relative_path "${file}")
+
+            # Define the destination file path
+            set(destination_file "${DEST_DIR}/${relative_path}")
+
+            # Get the directory component of the destination file path
+            get_filename_component(destination_dir "${destination_file}" DIRECTORY)
+
+            # Create the destination directory if it doesn't exist
+            file(MAKE_DIRECTORY "${destination_dir}")
+
+            # Copy the file to the destination directory
+            file(COPY "${file}" DESTINATION "${destination_dir}")
+
+            # Optionally, output the result for verification
+            message(STATUS "Copied ${file} to ${destination_file}")
+        endforeach()
     else()
         message(STATUS "Creating macOS executable")
         add_executable(${PROJECT_NAME} ${SOURCES} ${IMGUI_SOURCES})
