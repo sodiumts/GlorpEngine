@@ -9,7 +9,6 @@
 
 #include <vector>
 #include <memory>
-#include <unordered_map>
 
 #include "tiny_gltf.h"
 
@@ -37,7 +36,6 @@ class GlorpModel {
             std::vector<Vertex> vertices{};
             std::vector<uint32_t> indices{};
 
-            void loadModelFromOBJ(const std::string &filepath);
             void loadModelFromGLTF(tinygltf::Model &model);
         };
 
@@ -47,7 +45,6 @@ class GlorpModel {
         GlorpModel(const GlorpModel&) = delete;
         GlorpModel &operator=(const GlorpModel &) = delete;
 
-        static std::unique_ptr<GlorpModel> createModelFromOBJ(GlorpDevice &device, const std::string &filepath);
         static std::unique_ptr<GlorpModel> createModelFromGLTF(GlorpDevice &device, tinygltf::Model &model);
 
         void bind(VkCommandBuffer commandBuffer);

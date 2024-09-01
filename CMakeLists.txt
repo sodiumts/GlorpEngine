@@ -71,11 +71,6 @@ else()
     message(STATUS "Using GLFW library at: ${GLFW_LIB}")
 endif()
 
-if (NOT TINYOBJ_PATH)
-    message(STATUS "TINYOBJ_PATH not specified in .env.cmake, using external/tinyobjloader")
-    set(TINYOBJ_PATH external/tinyobjloader)
-endif()
-
 file(GLOB_RECURSE SOURCES ${PROJECT_SOURCE_DIR}/src/*.cpp)
 file(GLOB IMGUI_SOURCES
     ${PROJECT_SOURCE_DIR}/external/imgui/*.cpp
@@ -102,7 +97,6 @@ if (WIN32)
         ${PROJECT_SOURCE_DIR}/external/imgui
         ${PROJECT_SOURCE_DIR}/external/imgui/backends
         ${Vulkan_INCLUDE_DIRS}
-        ${TINYOBJ_PATH}
         ${GLFW_INCLUDE_DIRS}
     )
 
@@ -203,7 +197,6 @@ elseif(APPLE)
         ${PROJECT_SOURCE_DIR}/external
         ${PROJECT_SOURCE_DIR}/external/imgui
         ${PROJECT_SOURCE_DIR}/external/imgui/backends
-        ${TINYOBJ_PATH}
         ${PROJECT_SOURCE_DIR}/src
     )
 
@@ -215,7 +208,6 @@ elseif (UNIX)
 
     target_include_directories(${PROJECT_NAME} PUBLIC
         ${PROJECT_SOURCE_DIR}/src
-        ${TINYOBJ_PATH}
     )
 
     target_link_libraries(${PROJECT_NAME} glfw ${Vulkan_LIBRARIES})
