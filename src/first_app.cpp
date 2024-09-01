@@ -175,7 +175,7 @@ void FirstApp::run() {
 void FirstApp::loadGameObjects() {
 
     GlorpGameObject helmet = GlorpGameObject::createGameObjectFromAscii(m_glorpDevice, "models/DamagedHelmet/DamagedHelmet.gltf");
-    helmet.transform.translation = {1.5f, .0f, .0f};
+    helmet.transform.translation = {.0f, .0f, .0f};
     helmet.transform.scale = {1.f, 1.f, 1.f};
     m_gameObjects.emplace(helmet.getId(), std::move(helmet));
 
