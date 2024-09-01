@@ -32,6 +32,7 @@ layout(set = 1, binding = 0) uniform sampler2D albedo;
 layout(set = 1, binding = 1) uniform sampler2D normalMap;
 layout(set = 1, binding = 2) uniform sampler2D emissiveMap;
 layout(set = 1, binding = 3) uniform sampler2D aoMap;
+layout(set = 1, binding = 4) uniform sampler2D metallicRoughnessMap;
 
 void main() {
     vec3 specularLight = vec3(0.0);

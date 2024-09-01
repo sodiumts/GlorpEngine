@@ -31,7 +31,7 @@ FirstApp::FirstApp() {
     loadGameObjects();
 
     texturePool = GlorpDescriptorPool::Builder(m_glorpDevice)
-        .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, GlorpSwapChain::MAX_FRAMES_IN_FLIGHT * 4 * m_gameObjects.size())
+        .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, GlorpSwapChain::MAX_FRAMES_IN_FLIGHT * 5 * m_gameObjects.size())
         .build();
 }
 FirstApp::~FirstApp() {}
@@ -67,6 +67,7 @@ void FirstApp::run() {
         .addBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT) // Normal Map
         .addBinding(2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT) // Emissive Map
         .addBinding(3, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT) // AO Map
+        .addBinding(4, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT) // Metallic Roughness Map
         .build();
 
     for (auto &kv : m_gameObjects) {
@@ -95,11 +96,17 @@ void FirstApp::run() {
         aoImageInfo.imageView = obj.material->aoTexture->getImageView();
         aoImageInfo.imageLayout = obj.material->aoTexture->getImageLayout();
 
+        VkDescriptorImageInfo metallicImageInfo {};
+        metallicImageInfo.sampler = obj.material->metallicRoughnessTexture->getSampler();
+        metallicImageInfo.imageView = obj.material->metallicRoughnessTexture->getImageView();
+        metallicImageInfo.imageLayout = obj.material->metallicRoughnessTexture->getImageLayout();
+
         GlorpDescriptorWriter(*textureSetLayout, *texturePool)
             .writeImage(0, &albedoImageInfo)
             .writeImage(1, &normalImageInfo)
             .writeImage(2, &emissiveImageInfo)
             .writeImage(3, &aoImageInfo)
+            .writeImage(4, &metallicImageInfo)
             .build(obj.descriptorSet);
     }
 

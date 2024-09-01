@@ -131,6 +131,20 @@ void GlorpGameObject::assembleGameObject(GlorpDevice &device, GlorpGameObject &g
             }
         }
 
+        // Handle metallic roughness 
+        for (const auto&material : gltfModel.materials) {
+            if(material.values.find("metallicRoughnessTexture") != material.values.end()) {
+                std::cout << "Found metallic roughness texture" << std::endl;
+                const auto& metallicRoughnessTexture = material.values.at("metallicRoughnessTexture");
+                if(metallicRoughnessTexture.TextureIndex() >= 0) {
+                    const tinygltf::Texture& texture = gltfModel.textures[metallicRoughnessTexture.TextureIndex()];
+                    const tinygltf::Image& image = gltfModel.images[texture.source];
+                    materialComponent->metallicRoughnessTexture = std::make_shared<GlorpTexture>(device, image);
+            }   
+            }
+        }
+
+
         // Handle occlusionTexture
         {
             const tinygltf::Texture& texture = gltfModel.textures[material.occlusionTexture.index];

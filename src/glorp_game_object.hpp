@@ -30,6 +30,7 @@ struct MaterialComponent {
     std::shared_ptr<GlorpTexture> aoTexture;
     std::shared_ptr<GlorpTexture> emissiveTexture;
     std::shared_ptr<GlorpTexture> normalTexture;
+    std::shared_ptr<GlorpTexture> metallicRoughnessTexture;
 };
 
 class GlorpGameObject {
