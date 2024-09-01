@@ -1,6 +1,7 @@
 # Glorp Engine
 Glorp engine is a Vulkan / GLFW based rendering engine for MacOS with ARM processors and Windows, written in C++
-![image](https://github.com/user-attachments/assets/f7aa9675-3040-493c-9952-fe8df2e919c3)
+<img width="1363" alt="Screenshot 2024-09-01 at 02 48 23" src="https://github.com/user-attachments/assets/900ae3fe-4629-4757-870d-b5e188aa71d6">
+
 
 *Model credits:*  
 Source : https://github.com/KhronosGroup/glTF-Sample-Assets/tree/main/Models/DamagedHelmet  
@@ -28,8 +29,7 @@ Make sure you have the following tools installed on your system:
 ### Libraries
 * **Vulkan SDK**: Make sure Vulkan is installed and `VULKAN_SDK_PATH` is set in `.env.cmake` if using a specific version. Consult [LunarG](https://vulkan.lunarg.com/) for the Vulkan SDK installation.
 * **GLFW**: GLFW should get installed by CMake, if you wish to use a specific version, set `GLFW_PATH` in `.env.cmake`.
-* **tinyOBJLoader**: The git repository containts `tiny_obj_loader.h` header in `external/`. If you wish to provide your own specific version and specify `TINYOBJ_PATH` in `.env.cmake`.
-* **Dear ImGui**: The external folder should contain the git submodule for Dear ImGui.
+* Everything else is statically compiled from the `external/` directory.
 ## Environment Setup
 ### .env.cmake
 Create a `.env.cmake` file in the project root and specify the necessary dependency paths:
@@ -39,7 +39,6 @@ Example file:
 set(MINGW_PATH "C:/path/to/mingw")
 set(VULKAN_SDK_PATH "C:/path/to/vulkan")
 set(GLFW_PATH "C:/path/to/glfw")
-set(TINYOBJ_PATH "path/to/tinyobjloader") # Optional if using the included version
 
 # MacOS only (For app bundle creation)
 set(VULKAN_MAC_LOCATION username/VulkanSDK/1.3.283.0)
