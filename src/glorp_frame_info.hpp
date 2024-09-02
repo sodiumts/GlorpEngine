@@ -37,6 +37,8 @@ struct FrameInfo {
     bool useAlbedoMap{true};
     bool useEmissiveMap{true};
     bool useAOMap{true};
+
+    float lightVerticalPosition;
 };
 
 }

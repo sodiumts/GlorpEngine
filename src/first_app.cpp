@@ -151,7 +151,8 @@ void FirstApp::run() {
                 glorpImgui.useNormalMap,
                 glorpImgui.useAlbedoMap,
                 glorpImgui.useEmissiveMap,
-                glorpImgui.useAOMap
+                glorpImgui.useAOMap,
+                glorpImgui.lightPosition
             };
             //update
             GlobalUbo ubo{};

@@ -58,6 +58,8 @@ void PointLightSystem::update(FrameInfo &frameInfo, GlobalUbo &ubo) {
 
         obj.transform.translation = glm::vec3(rotateLight * glm::vec4(obj.transform.translation, 1.f));
 
+        obj.transform.translation.y = frameInfo.lightVerticalPosition;
+
         ubo.pointLights[lightIndex].position = glm::vec4(obj.transform.translation, 1.f);
         ubo.pointLights[lightIndex].color = glm::vec4(obj.color, frameInfo.lightIntensity);
 

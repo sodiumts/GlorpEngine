@@ -86,6 +86,7 @@ void GlorpImgui::defaultWindow(FrameInfo &frameInfo) {
     if(ImGui::CollapsingHeader("Light Control")) {
         ImGui::SliderFloat("Brightness", &m_lightBrightness, 0.0f, 1.0f);
         ImGui::SliderFloat("Rotation Multiplier", &m_rotationMultiplier, 0.0f, 10.f);
+        ImGui::SliderFloat("Vertical position", &lightPosition, -5.f, 5.f);
     }
     if(ImGui::CollapsingHeader("Texture Control")) {
         ImGui::Checkbox("Use Albedo", &useAlbedoMap);

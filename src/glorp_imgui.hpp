@@ -22,6 +22,8 @@ class GlorpImgui {
         bool useAlbedoMap{true};
         bool useEmissiveMap{true};
         bool useAOMap{true};
+
+        float lightPosition{1.f};
     private:
         void initImgui(VkRenderPass renderPass);
         void defaultWindow(FrameInfo &frameInfo);
