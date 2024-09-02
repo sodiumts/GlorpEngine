@@ -87,7 +87,7 @@ void main() {
     }
 
     float metallic = texture(metallicRoughnessMap, fragUV).b;
-    float roughness = texture(metallicRoughnessMap, fragUV).g;
+    float roughness = 1 - texture(metallicRoughnessMap, fragUV).g;
 
     vec3 surfaceNormal = fragNormalWorld;
 
