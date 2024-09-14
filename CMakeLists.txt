@@ -1,6 +1,7 @@
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 cmake_minimum_required(VERSION 3.29.0)
 project(GlorpEngine VERSION 0.2.0)
+set(CMAKE_CXX_STANDARD 23)
 
 include(./.env.cmake OPTIONAL RESULT_VARIABLE LOCAL_ENV)
 if (NOT LOCAL_ENV)
@@ -85,7 +86,6 @@ file(GLOB IMGUI_SOURCES
 
 if (WIN32)
     add_executable(${PROJECT_NAME} ${SOURCES} ${IMGUI_SOURCES})
-    target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_23)
 
     message(STATUS "Creating build for Windows")
 
@@ -123,7 +123,6 @@ elseif(APPLE)
         if (NOT GLFW_MAC_LOCATION)
             message(FATAL_ERROR "GLFW_MAC_LOCATION not set in .env.cmake")
         endif()
-        # set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "Minimum macOS deployment target")
 
         set(RESOURCE_LOCATIONS "Resources/")
         set(IMAGE_FILE ${PROJECT_SOURCE_DIR}/assets/glorp.icns)
@@ -136,16 +135,9 @@ elseif(APPLE)
         foreach(file ${SHADER_FILES})
             set_source_files_properties(${file} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources/shaders")
         endforeach()
-        # foreach(file ${MODEL_FILES})
-        #     get_filename_component(file_dir "${file}" DIRECTORY)
-        #     string(REPLACE "${PROJECT_SOURCE_DIR}/models" "" relative_path "${file}")
-        #     message(STATUS "Adding model: ${relative_path}")
-        #     set_source_files_properties(${file} PROPERTIES HEADER_FILE_ONLY TRUE MACOSX_PACKAGE_LOCATION "Resources/models${relative_path}")
-        # endforeach()
         set_source_files_properties(${IMAGE_FILE} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
 
         add_executable(${PROJECT_NAME} MACOSX_BUNDLE ${SOURCES} ${IMGUI_SOURCES} ${SHADER_FILES} ${TEXTURE_FILES} ${MODEL_FILES} "${IMAGE_FILE}")
-        target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_23)
 
         set_target_properties(${PROJECT_NAME} PROPERTIES
             MACOSX_BUNDLE_BUNDLE_NAME "${CMAKE_PROJECT_NAME}"
@@ -195,28 +187,16 @@ elseif(APPLE)
         file(GLOB_RECURSE MODEL_FILES "${PROJECT_SOURCE_DIR}/models/*")
 
         foreach(file ${MODEL_FILES})
-            # Get the relative path of the file with respect to the source directory
             string(REPLACE "${SOURCE_DIR}/" "" relative_path "${file}")
-
-            # Define the destination file path
             set(destination_file "${DEST_DIR}/${relative_path}")
-
-            # Get the directory component of the destination file path
             get_filename_component(destination_dir "${destination_file}" DIRECTORY)
-
-            # Create the destination directory if it doesn't exist
             file(MAKE_DIRECTORY "${destination_dir}")
-
-            # Copy the file to the destination directory
             file(COPY "${file}" DESTINATION "${destination_dir}")
-
-            # Optionally, output the result for verification
             message(STATUS "Copied ${file} to ${destination_file}")
         endforeach()
     else()
         message(STATUS "Creating macOS executable")
         add_executable(${PROJECT_NAME} ${SOURCES} ${IMGUI_SOURCES})
-        target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_23)
     endif()
 
     target_include_directories(${PROJECT_NAME} PUBLIC
