@@ -7,6 +7,7 @@
 #include <cstring>
 #include <unordered_map>
 #include <memory>
+#include <stdexcept>
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/hash.hpp>
