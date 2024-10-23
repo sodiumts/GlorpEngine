@@ -211,8 +211,12 @@ elseif(APPLE)
 
 elseif (UNIX)
     message(STATUS "Creating build for UNIX")
+    add_executable(${PROJECT_NAME} ${SOURCES} ${IMGUI_SOURCES})
 
     target_include_directories(${PROJECT_NAME} PUBLIC
+        ${PROJECT_SOURCE_DIR}/external
+        ${PROJECT_SOURCE_DIR}/external/imgui
+        ${PROJECT_SOURCE_DIR}/external/imgui/backends
         ${PROJECT_SOURCE_DIR}/src
     )
 
