@@ -21,8 +21,7 @@ Make sure you have the following tools installed on your system:
 * **CMake** (version 3.29.0 or later)
 ### Platform-specific requirements
 **Windows**
-* **MinGW** (for MinGW Makefile generation)
-  * Ensure `MINGW_PATH` is set in `.env.cmake`
+* **Clang**
 
 **MacOS**
 * **Xcode command line tools**
