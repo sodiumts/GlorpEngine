@@ -35,7 +35,6 @@ Create a `.env.cmake` file in the project root and specify the necessary depende
 Example file:
 ```cmake
 # .env.cmake
-set(MINGW_PATH "C:/path/to/mingw")
 set(VULKAN_SDK_PATH "C:/path/to/vulkan")
 set(GLFW_PATH "C:/path/to/glfw")
 
