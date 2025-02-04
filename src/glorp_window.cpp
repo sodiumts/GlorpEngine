@@ -24,30 +24,23 @@ void GlorpWindow::InitWindow() {
     }
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     
-    // if(fullscreenBorderless) {
-    //     GLFWmonitor* primary = glfwGetPrimaryMonitor();
-    //     const GLFWvidmode* mode = glfwGetVideoMode(primary);
-    
-    //     glfwWindowHint(GLFW_RED_BITS, mode->redBits);
-    //     glfwWindowHint(GLFW_GREEN_BITS, mode->greenBits);
-    //     glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
-    //     glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
-    //     m_window = glfwCreateWindow(mode->width, mode->height, m_windowName.c_str(), primary, NULL);
-    // } else {
-        
-    // }
-
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
     m_window = glfwCreateWindow(m_width, m_height, m_windowName.c_str(), nullptr, nullptr);
 
     glfwSetWindowUserPointer(m_window, this);
     glfwSetFramebufferSizeCallback(m_window, frameBufferResizeCallback);
+    glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    if (glfwRawMouseMotionSupported()) {
+        glfwSetInputMode(m_window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
+    }
 }
+
 void GlorpWindow::createWindowSurface(VkInstance instance, VkSurfaceKHR * surface) {
     if(glfwCreateWindowSurface(instance, m_window, nullptr, surface) != VK_SUCCESS) {
         throw std::runtime_error("Failed to create a window surface");
     }
 }
+
 void GlorpWindow::frameBufferResizeCallback(GLFWwindow *window, int width, int height) {
     auto glorpWindow = reinterpret_cast<GlorpWindow *>(glfwGetWindowUserPointer(window));
     glorpWindow->m_frameBufferResized = true;
