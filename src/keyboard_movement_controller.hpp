@@ -27,6 +27,11 @@ class KeyboardMovementController {
         KeyMappings keys{};
         float moveSpeed{3.f};
         float turnSpeed{1.5f};
+        bool m_firstMouse = true;
+        double m_lastX = 0.0;
+        double m_lastY = 0.0;
+        float m_mouseSensitivity = 0.002f;
+        bool m_inputInitialized = false; // Track input setup
         bool toggleFullscreenPending = false;
         GlorpWindow &m_glorpWindow;
     };
