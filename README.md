@@ -1,6 +1,6 @@
 # Glorp Engine
 Glorp engine is a Vulkan / GLFW based rendering engine for MacOS with ARM processors and Windows, written in C++
-<img width="1363" alt="Screenshot 2024-09-01 at 02 48 23" src="https://github.com/user-attachments/assets/900ae3fe-4629-4757-870d-b5e188aa71d6">
+![image](https://github.com/user-attachments/assets/a7c39898-9d80-4e41-9668-63d763d126cd)
 
 
 *Model credits:*  
