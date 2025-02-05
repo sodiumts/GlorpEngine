@@ -1,5 +1,4 @@
 #version 450
-
 layout(location = 0) out vec4 outColor;
 layout(location = 0) in vec3 fragColor;
 layout(location = 1) in vec3 fragPosWorld;
@@ -27,6 +26,8 @@ layout(set = 0, binding = 0) uniform GlobalUbo {
     PointLight pointLights[10];
     int numLights;
 } ubo;
+
+layout(set = 0, binding = 1) uniform samplerCube skybox;
 
 layout(set = 1, binding = 0) uniform sampler2D albedoMap;
 layout(set = 1, binding = 1) uniform sampler2D normalMap;
@@ -87,7 +88,7 @@ void main() {
     }
 
     float metallic = texture(metallicRoughnessMap, fragUV).b;
-    float roughness = 1 - texture(metallicRoughnessMap, fragUV).g;
+    float roughness = texture(metallicRoughnessMap, fragUV).g;
 
     vec3 surfaceNormal = fragNormalWorld;
 
@@ -137,7 +138,12 @@ void main() {
 
     vec3 ambient = ubo.ambientLightColor.xyz * ubo.ambientLightColor.w * albedo * ao;
 
-    vec3 color = ambient + Lo;
+    vec3 R = reflect(-V, surfaceNormal);
+    vec3 reflectionColor = texture(skybox, R).rgb;
+    vec3 F_env = fresnelSchlick(max(dot(surfaceNormal, V), 0.0), F0);
+    vec3 envSpecular = F_env * reflectionColor * (1.0 - roughness) * ao;
+
+    vec3 color = ambient + Lo + envSpecular;
 
     if(push.useMaps.z > 0) {
         color += emmisive;

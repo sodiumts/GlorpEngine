@@ -1,6 +1,9 @@
 #include "first_app.hpp"
 
+#include "glorp_cubemap.hpp"
+#include "glorp_game_object.hpp"
 #include "glorp_imgui.hpp"
+#include "systems/cubemap_render_system.hpp"
 #include "systems/simple_render_system.hpp"
 #include "systems/point_light_system.hpp"
 
@@ -10,6 +13,7 @@
 
 #include <chrono>
 #include <cassert>
+#include <vulkan/vulkan_core.h>
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -26,8 +30,9 @@ FirstApp::FirstApp() {
     globalPool = GlorpDescriptorPool::Builder(m_glorpDevice)
         .setMaxSets(GlorpSwapChain::MAX_FRAMES_IN_FLIGHT)
         .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, GlorpSwapChain::MAX_FRAMES_IN_FLIGHT)
+        .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, GlorpSwapChain::MAX_FRAMES_IN_FLIGHT)
         .build();
-
+    
     loadGameObjects();
 
     texturePool = GlorpDescriptorPool::Builder(m_glorpDevice)
@@ -52,13 +57,29 @@ void FirstApp::run() {
 
     auto globalSetLayout = GlorpDescriptorSetLayout::Builder(m_glorpDevice)
         .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS)
+        .addBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
         .build();
+
+    GlorpCubeMap cubemap = GlorpCubeMap(m_glorpDevice, {
+        "cubemap/skybox/right.jpg",
+        "cubemap/skybox/left.jpg",
+        "cubemap/skybox/bottom.jpg",
+        "cubemap/skybox/top.jpg",
+        "cubemap/skybox/front.jpg",
+        "cubemap/skybox/back.jpg",
+    });
 
     std::vector<VkDescriptorSet> globalDescriptorSets(GlorpSwapChain::MAX_FRAMES_IN_FLIGHT);
     for(int i = 0; i < globalDescriptorSets.size(); i++) {
         auto bufferInfo = uboBuffers[i]->descriptorInfo();
+        VkDescriptorImageInfo skyboxInfo{
+            .sampler = cubemap.getSampler(),
+            .imageView = cubemap.getImageView(),
+            .imageLayout = cubemap.getImageLayout()
+        };
         GlorpDescriptorWriter(*globalSetLayout, *globalPool)
             .writeBuffer(0, &bufferInfo)
+            .writeImage(1, &skyboxInfo)
             .build(globalDescriptorSets[i]);
     }
 
@@ -113,6 +134,7 @@ void FirstApp::run() {
 
     SimpleRenderSystem simpleRenderSystem{m_glorpDevice, m_glorpRenderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout(), textureSetLayout->getDescriptorSetLayout()};
     PointLightSystem pointLightSystem{m_glorpDevice, m_glorpRenderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout()};
+    CubeMapRenderSystem cubemapRenderSystem{m_glorpDevice, m_glorpRenderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout()};
     GlorpImgui glorpImgui{m_glorpDevice, m_glorpRenderer.getSwapChainRenderPass(), m_glorpWindow};
 
     GlorpCamera camera{};
@@ -169,6 +191,7 @@ void FirstApp::run() {
 
 
             simpleRenderSystem.renderGameObjects(frameInfo);
+            cubemapRenderSystem.renderCubemap(frameInfo);
             pointLightSystem.render(frameInfo);
 
             glorpImgui.drawUI(frameInfo);
