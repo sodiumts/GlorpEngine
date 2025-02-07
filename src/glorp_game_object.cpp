@@ -67,38 +67,22 @@ glm::mat3 TransformComponent::normalMatrix() {
 }
 
 GlorpGameObject GlorpGameObject::createGameObjectFromAscii(GlorpDevice &device, const std::string &filepath) {
-    std::string fullPath = RESOURCE_LOCATIONS + filepath;
-    tinygltf::Model gltfModel;
-    tinygltf::TinyGLTF loader;
-    std::string err;
-    std::string warn;
-    auto start = std::chrono::high_resolution_clock::now();
-    bool res = loader.LoadASCIIFromFile(&gltfModel, &err, &warn, fullPath);
-    if(!warn.empty()) {
-        std::cout << "Warning from loading gltf file: " << warn << std::endl;
-    }
-    if(!err.empty()) {
-        std::cout << "Error loading gltf file: " << err << std::endl;
-    }
-    auto end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> duration = end - start;
-    std::cout << "Time taken to load gltf file " << fullPath << ": " << duration.count() << " seconds" << std::endl;
+    tinygltf::Model gameObjectModel;
+    loadAsciiGLTF(gameObjectModel, filepath);
 
     GlorpGameObject gameObject = GlorpGameObject::createGameObject();
-    assembleGameObject(device, gameObject, gltfModel);
+    assembleGameObject(device, gameObject, gameObjectModel);
 
     return gameObject;
 }
 
-// I know this is ugly, but I'm not sure how to handle this better.
-GlorpGameObject GlorpGameObject::createGameObjectFromBin(GlorpDevice &device, const std::string &filepath) {
+void GlorpGameObject::loadBinaryGLTF(tinygltf::Model &model, const std::string &filepath) {
     std::string fullPath = RESOURCE_LOCATIONS + filepath;
-    tinygltf::Model gltfModel;
     tinygltf::TinyGLTF loader;
     std::string err;
     std::string warn;
     auto start = std::chrono::high_resolution_clock::now();
-    bool res = loader.LoadBinaryFromFile(&gltfModel, &err, &warn, fullPath);
+    bool res = loader.LoadBinaryFromFile(&model, &err, &warn, fullPath);
     if(!warn.empty()) {
         std::cout << "Warning from loading gltf file: " << warn << std::endl;
     }
@@ -108,9 +92,32 @@ GlorpGameObject GlorpGameObject::createGameObjectFromBin(GlorpDevice &device, co
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> duration = end - start;
     std::cout << "Time taken to load gltf file " << fullPath << ": " << duration.count() << " seconds" << std::endl;
+}
 
+void GlorpGameObject::loadAsciiGLTF(tinygltf::Model &model, const std::string &filepath) {
+    std::string fullPath = RESOURCE_LOCATIONS + filepath;
+    tinygltf::TinyGLTF loader;
+    std::string err;
+    std::string warn;
+    auto start = std::chrono::high_resolution_clock::now();
+    bool res = loader.LoadASCIIFromFile(&model, &err, &warn, fullPath);
+    if(!warn.empty()) {
+        std::cout << "Warning from loading gltf file: " << warn << std::endl;
+    }
+    if(!err.empty()) {
+        std::cout << "Error loading gltf file: " << err << std::endl;
+    }
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> duration = end - start;
+    std::cout << "Time taken to load gltf file " << fullPath << ": " << duration.count() << " seconds" << std::endl;
+}
+
+GlorpGameObject GlorpGameObject::createGameObjectFromBin(GlorpDevice &device, const std::string &filepath) {
+    tinygltf::Model gameObjectModel;
+    loadBinaryGLTF(gameObjectModel, filepath);
+    
     GlorpGameObject gameObject = GlorpGameObject::createGameObject();
-    assembleGameObject(device, gameObject, gltfModel);
+    assembleGameObject(device, gameObject, gameObjectModel);
 
     return gameObject;
 }

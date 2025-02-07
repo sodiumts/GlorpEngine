@@ -45,6 +45,8 @@ class GlorpGameObject {
 
     static GlorpGameObject createGameObjectFromAscii(GlorpDevice &device, const std::string &filepath);
     static GlorpGameObject createGameObjectFromBin(GlorpDevice &device, const std::string &filepath);
+    static void loadBinaryGLTF(tinygltf::Model &model, const std::string &filepath);
+    static void loadAsciiGLTF(tinygltf::Model &model, const std::string &filepath);
 
     GlorpGameObject(const GlorpGameObject&) = delete;
     GlorpGameObject &operator=(const GlorpGameObject &) = delete;
