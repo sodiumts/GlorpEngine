@@ -61,12 +61,12 @@ void FirstApp::run() {
         .build();
 
     GlorpCubeMap cubemap = GlorpCubeMap(m_glorpDevice, {
-        "cubemap/skybox/right.jpg",
-        "cubemap/skybox/left.jpg",
-        "cubemap/skybox/bottom.jpg",
-        "cubemap/skybox/top.jpg",
-        "cubemap/skybox/front.jpg",
-        "cubemap/skybox/back.jpg",
+        std::string(RESOURCE_LOCATIONS) + "cubemap/skybox/right.jpg",
+        std::string(RESOURCE_LOCATIONS) + "cubemap/skybox/left.jpg",
+        std::string(RESOURCE_LOCATIONS) + "cubemap/skybox/bottom.jpg",
+        std::string(RESOURCE_LOCATIONS) + "cubemap/skybox/top.jpg",
+        std::string(RESOURCE_LOCATIONS) + "cubemap/skybox/front.jpg",
+        std::string(RESOURCE_LOCATIONS) + "cubemap/skybox/back.jpg",
     });
 
     std::vector<VkDescriptorSet> globalDescriptorSets(GlorpSwapChain::MAX_FRAMES_IN_FLIGHT);

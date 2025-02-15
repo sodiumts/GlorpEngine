@@ -116,13 +116,13 @@ elseif(APPLE)
     if(BUILD_APP_BUNDLE)
         message(STATUS "Creating macOS app bundle")
 
-        if (NOT VULKAN_MAC_LOCATION)
-            message(FATAL_ERROR "VULKAN_MAC_LOCATION not set in .env.cmake")
-        endif()
+           if (NOT VULKAN_MAC_LOCATION)
+               message(FATAL_ERROR "VULKAN_MAC_LOCATION not set in .env.cmake")
+           endif()
 
-        if (NOT GLFW_MAC_LOCATION)
-            message(FATAL_ERROR "GLFW_MAC_LOCATION not set in .env.cmake")
-        endif()
+           if (NOT GLFW_MAC_LOCATION)
+               message(FATAL_ERROR "GLFW_MAC_LOCATION not set in .env.cmake")
+           endif()
 
         set(RESOURCE_LOCATIONS "Resources/")
         set(IMAGE_FILE ${PROJECT_SOURCE_DIR}/assets/glorp.icns)
@@ -131,6 +131,7 @@ elseif(APPLE)
 
         file(GLOB_RECURSE SHADER_FILES "${PROJECT_SOURCE_DIR}/shaders/*.spv")
         file(GLOB_RECURSE MODEL_FILES "${PROJECT_SOURCE_DIR}/models/*")
+        file(GLOB_RECURSE CUBEMAP_FILES "${PROJECT_SOURCE_DIR}/cubemap/*")
 
         foreach(file ${SHADER_FILES})
             set_source_files_properties(${file} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources/shaders")
@@ -181,14 +182,28 @@ elseif(APPLE)
             COMMAND install_name_tool -change ${VULKAN_MAC_LOCATION}/macos/lib/libvulkan.1.dylib @rpath/libvulkan.1.dylib
                 "$<TARGET_BUNDLE_DIR:${PROJECT_NAME}>/Contents/MacOS/${PROJECT_NAME}"
         )
+        message(STATUS "PATH OF libglfw.3.dylib: ${GLFW_MAC_LOCATION}/lib/libglfw.3.dylib")
 
         set(DEST_DIR "${CMAKE_BINARY_DIR}/${CMAKE_PROJECT_NAME}.app/Contents/Resources/models")
         set(SOURCE_DIR "${PROJECT_SOURCE_DIR}/models")
         file(GLOB_RECURSE MODEL_FILES "${PROJECT_SOURCE_DIR}/models/*")
 
+        set(DEST_DIR_CUBEMAP "${CMAKE_BINARY_DIR}/${CMAKE_PROJECT_NAME}.app/Contents/Resources/cubemap")
+        set(SOURCE_DIR_CUBEMAP "${PROJECT_SOURCE_DIR}/cubemap")
+        file(GLOB_RECURSE CUBEMAP_FILES "${PROJECT_SOURCE_DIR}/cubemap/*")
+
         foreach(file ${MODEL_FILES})
             string(REPLACE "${SOURCE_DIR}/" "" relative_path "${file}")
             set(destination_file "${DEST_DIR}/${relative_path}")
+            get_filename_component(destination_dir "${destination_file}" DIRECTORY)
+            file(MAKE_DIRECTORY "${destination_dir}")
+            file(COPY "${file}" DESTINATION "${destination_dir}")
+            message(STATUS "Copied ${file} to ${destination_file}")
+        endforeach()
+
+        foreach(file ${CUBEMAP_FILES})
+            string(REPLACE "${SOURCE_DIR_CUBEMAP}/" "" relative_path "${file}")
+            set(destination_file "${DEST_DIR_CUBEMAP}/${relative_path}")
             get_filename_component(destination_dir "${destination_file}" DIRECTORY)
             file(MAKE_DIRECTORY "${destination_dir}")
             file(COPY "${file}" DESTINATION "${destination_dir}")

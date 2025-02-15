@@ -23,7 +23,7 @@ void GlorpWindow::InitWindow() {
         std::cerr << "Failed to initialize GLFW" << std::endl;
     }
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    
+
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
     m_window = glfwCreateWindow(m_width, m_height, m_windowName.c_str(), nullptr, nullptr);
 
