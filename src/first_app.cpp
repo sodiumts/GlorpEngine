@@ -21,6 +21,7 @@
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 #include <glm/gtc/constants.hpp>
+#include <iostream>
 
 #ifndef MODELS_DIR
 #define MODELS_DIR
@@ -40,8 +41,8 @@ FirstApp::FirstApp() {
     texturePool = GlorpDescriptorPool::Builder(m_glorpDevice)
         .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, GlorpSwapChain::MAX_FRAMES_IN_FLIGHT * 5 * m_gameObjects.size())
         .build();
-    glfwSetWindowUserPointer(m_glorpWindow.getGLFWwindow(), this);
-    glfwSetFramebufferSizeCallback(m_glorpWindow.getGLFWwindow(), frameBufferResizeCallback);
+    //glfwSetWindowUserPointer(m_glorpWindow.getGLFWwindow(), this);
+    //glfwSetFramebufferSizeCallback(m_glorpWindow.getGLFWwindow(), frameBufferResizeCallback);
 }
 FirstApp::~FirstApp() {}
 
@@ -149,41 +150,22 @@ void FirstApp::run() {
     
     std::thread renderThread([&] {
         auto currentTime = std::chrono::high_resolution_clock::now();
-        while(!m_glorpWindow.shouldClose()) {
 
-        // recreate swapchain while resizing window
-        if(m_frameBufferResized) {
-            int width = 0; int height = 0;
-            glfwGetFramebufferSize(m_glorpWindow.getGLFWwindow(), &width, &height);
-            if (width == 0 || height == 0) {
-                glfwGetFramebufferSize(m_glorpWindow.getGLFWwindow(), &width, &height);
-                glfwWaitEvents();
-            }
+        while(!m_glorpWindow.shouldClose()) { 
+            auto newTime = std::chrono::high_resolution_clock::now();
+            float frameTime = std::chrono::duration<float, std::chrono::seconds::period>(newTime - currentTime).count();
+            currentTime = newTime;
 
-            vkDeviceWaitIdle(m_glorpDevice.device());
-
-            m_glorpRenderer.recreateSwapChain();
+            cameraController.moveInPlaneXZ(frameTime, viewerObject);
+            camera.setViewYXZ(viewerObject.transform.translation, viewerObject.transform.rotation);
             float aspect = m_glorpRenderer.getAspectRatio();
             camera.setPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 1000.f);
 
-            m_frameBufferResized = false;
-        }
-        
-        auto newTime = std::chrono::high_resolution_clock::now();
-        float frameTime = std::chrono::duration<float, std::chrono::seconds::period>(newTime - currentTime).count();
-        currentTime = newTime;
+            if (auto commandBuffer = m_glorpRenderer.beginFrame()) {
+                int frameIndex = m_glorpRenderer.getFrameIndex();
 
-        cameraController.moveInPlaneXZ(frameTime, viewerObject);
-        camera.setViewYXZ(viewerObject.transform.translation, viewerObject.transform.rotation);
-        float aspect = m_glorpRenderer.getAspectRatio();
-        camera.setPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 1000.f);
-
-
-        if (auto commandBuffer = m_glorpRenderer.beginFrame()) {
-            int frameIndex = m_glorpRenderer.getFrameIndex();
-
-            FrameInfo frameInfo {
-                frameIndex,
+                FrameInfo frameInfo {
+                    frameIndex,
                     frameTime,
                     commandBuffer,
                     camera,
@@ -196,30 +178,30 @@ void FirstApp::run() {
                     glorpImgui.useEmissiveMap,
                     glorpImgui.useAOMap,
                     glorpImgui.lightPosition
-            };
-            //update
-            GlobalUbo ubo{};
-            ubo.projection = camera.getProjection();
-            ubo.view = camera.getView();
-            ubo.inverseView = camera.getInverseView();
-            pointLightSystem.update(frameInfo, ubo);
+                };
+                //update
+                GlobalUbo ubo{};
+                ubo.projection = camera.getProjection();
+                ubo.view = camera.getView();
+                ubo.inverseView = camera.getInverseView();
+                pointLightSystem.update(frameInfo, ubo);
 
-            uboBuffers[frameIndex]->writeToBuffer(&ubo);
-            uboBuffers[frameIndex]->flush();
+                uboBuffers[frameIndex]->writeToBuffer(&ubo);
+                uboBuffers[frameIndex]->flush();
 
-            // render
-            m_glorpRenderer.beginSwapChainRenderPass(commandBuffer);
+                // render
+                m_glorpRenderer.beginSwapChainRenderPass(commandBuffer);
 
 
-            simpleRenderSystem.renderGameObjects(frameInfo);
-            cubemapRenderSystem.renderCubemap(frameInfo);
-            pointLightSystem.render(frameInfo);
+                simpleRenderSystem.renderGameObjects(frameInfo);
+                cubemapRenderSystem.renderCubemap(frameInfo);
+                pointLightSystem.render(frameInfo);
 
-            glorpImgui.drawUI(frameInfo);
+                glorpImgui.drawUI(frameInfo);
 
-            m_glorpRenderer.endSwapChainRenderPass(commandBuffer);
-            m_glorpRenderer.endFrame();
-        }
+                m_glorpRenderer.endSwapChainRenderPass(commandBuffer);
+                m_glorpRenderer.endFrame();
+            }
         }
         vkDeviceWaitIdle(m_glorpDevice.device());
     });
@@ -229,11 +211,6 @@ void FirstApp::run() {
         glfwPollEvents();
     }
     renderThread.join();
-}
-
-void FirstApp::frameBufferResizeCallback(GLFWwindow *window, int width, int height) {
-    auto app = reinterpret_cast<FirstApp*>(window);
-    app->m_frameBufferResized = true;
 }
 
 void FirstApp::loadGameObjects() {

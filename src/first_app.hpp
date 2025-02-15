@@ -8,6 +8,7 @@
 #include "glorp_texture.hpp"
 
 #include <memory>
+#include <atomic>
 
 #ifndef RESOURCE_LOCATIONS
 #define RESOURCE_LOCATIONS ""
@@ -39,8 +40,6 @@ class FirstApp {
         std::unique_ptr<GlorpDescriptorPool> cubemapPool {};
         std::shared_ptr<GlorpTexture> m_globalTexture;
         GlorpGameObject::Map m_gameObjects;
-        static void frameBufferResizeCallback(GLFWwindow *window, int width, int height);
-        bool m_frameBufferResized = false;
 };
 
 }
