@@ -1,6 +1,8 @@
 #include "glorp_cubemap.hpp"
 #include "stb_image.h"
 #include "glorp_buffer.hpp"
+#include <stdexcept>
+#include <cstring>
 
 namespace Glorp {
 
@@ -110,7 +112,7 @@ void GlorpCubeMap::createCubemapImage(const std::vector<std::string> &filenames)
     stagingBuffer.map();
     for(size_t i = 0; i < 6; i++) {
         void* offset = static_cast<char*>(stagingBuffer.getMappedMemory()) + (i * faceSize);
-        memcpy(offset, pixels[i], faceSize);
+        std::memcpy(offset, pixels[i], faceSize);
     }
     stagingBuffer.unmap();
 
