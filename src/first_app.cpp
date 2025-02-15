@@ -14,6 +14,7 @@
 #include <GLFW/glfw3.h>
 #include <chrono>
 #include <cassert>
+#include <thread>
 #include <vulkan/vulkan_core.h>
 
 #define GLM_FORCE_RADIANS
@@ -146,11 +147,10 @@ void FirstApp::run() {
     viewerObject.transform.translation.z = -2.5f;
     KeyboardMovementController cameraController(m_glorpWindow);
     
+    std::thread renderThread([&] {
+        auto currentTime = std::chrono::high_resolution_clock::now();
+        while(!m_glorpWindow.shouldClose()) {
 
-    auto currentTime = std::chrono::high_resolution_clock::now();
-    while(!m_glorpWindow.shouldClose()) {
-        glfwPollEvents();
-        
         // recreate swapchain while resizing window
         if(m_frameBufferResized) {
             int width = 0; int height = 0;
@@ -165,9 +165,10 @@ void FirstApp::run() {
             m_glorpRenderer.recreateSwapChain();
             float aspect = m_glorpRenderer.getAspectRatio();
             camera.setPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 1000.f);
-            
+
             m_frameBufferResized = false;
         }
+        
         auto newTime = std::chrono::high_resolution_clock::now();
         float frameTime = std::chrono::duration<float, std::chrono::seconds::period>(newTime - currentTime).count();
         currentTime = newTime;
@@ -183,18 +184,18 @@ void FirstApp::run() {
 
             FrameInfo frameInfo {
                 frameIndex,
-                frameTime,
-                commandBuffer,
-                camera,
-                globalDescriptorSets[frameIndex],
-                m_gameObjects,
-                glorpImgui.getLightIntensity(),
-                glorpImgui.getRotationMultiplier(),
-                glorpImgui.useNormalMap,
-                glorpImgui.useAlbedoMap,
-                glorpImgui.useEmissiveMap,
-                glorpImgui.useAOMap,
-                glorpImgui.lightPosition
+                    frameTime,
+                    commandBuffer,
+                    camera,
+                    globalDescriptorSets[frameIndex],
+                    m_gameObjects,
+                    glorpImgui.getLightIntensity(),
+                    glorpImgui.getRotationMultiplier(),
+                    glorpImgui.useNormalMap,
+                    glorpImgui.useAlbedoMap,
+                    glorpImgui.useEmissiveMap,
+                    glorpImgui.useAOMap,
+                    glorpImgui.lightPosition
             };
             //update
             GlobalUbo ubo{};
@@ -219,8 +220,15 @@ void FirstApp::run() {
             m_glorpRenderer.endSwapChainRenderPass(commandBuffer);
             m_glorpRenderer.endFrame();
         }
+        }
+        vkDeviceWaitIdle(m_glorpDevice.device());
+    });
+
+    // Polling loop
+    while(!m_glorpWindow.shouldClose()) {
+        glfwPollEvents();
     }
-    vkDeviceWaitIdle(m_glorpDevice.device());
+    renderThread.join();
 }
 
 void FirstApp::frameBufferResizeCallback(GLFWwindow *window, int width, int height) {
