@@ -11,6 +11,7 @@
 #include "keyboard_movement_controller.hpp"
 #include "glorp_buffer.hpp"
 
+#include <GLFW/glfw3.h>
 #include <chrono>
 #include <cassert>
 #include <vulkan/vulkan_core.h>
@@ -38,6 +39,8 @@ FirstApp::FirstApp() {
     texturePool = GlorpDescriptorPool::Builder(m_glorpDevice)
         .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, GlorpSwapChain::MAX_FRAMES_IN_FLIGHT * 5 * m_gameObjects.size())
         .build();
+    glfwSetWindowUserPointer(m_glorpWindow.getGLFWwindow(), this);
+    glfwSetFramebufferSizeCallback(m_glorpWindow.getGLFWwindow(), frameBufferResizeCallback);
 }
 FirstApp::~FirstApp() {}
 
@@ -142,12 +145,29 @@ void FirstApp::run() {
     auto viewerObject = GlorpGameObject::createGameObject();
     viewerObject.transform.translation.z = -2.5f;
     KeyboardMovementController cameraController(m_glorpWindow);
-
+    
 
     auto currentTime = std::chrono::high_resolution_clock::now();
     while(!m_glorpWindow.shouldClose()) {
         glfwPollEvents();
+        
+        // recreate swapchain while resizing window
+        if(m_frameBufferResized) {
+            int width = 0; int height = 0;
+            glfwGetFramebufferSize(m_glorpWindow.getGLFWwindow(), &width, &height);
+            if (width == 0 || height == 0) {
+                glfwGetFramebufferSize(m_glorpWindow.getGLFWwindow(), &width, &height);
+                glfwWaitEvents();
+            }
 
+            vkDeviceWaitIdle(m_glorpDevice.device());
+
+            m_glorpRenderer.recreateSwapChain();
+            float aspect = m_glorpRenderer.getAspectRatio();
+            camera.setPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 1000.f);
+            
+            m_frameBufferResized = false;
+        }
         auto newTime = std::chrono::high_resolution_clock::now();
         float frameTime = std::chrono::duration<float, std::chrono::seconds::period>(newTime - currentTime).count();
         currentTime = newTime;
@@ -201,6 +221,11 @@ void FirstApp::run() {
         }
     }
     vkDeviceWaitIdle(m_glorpDevice.device());
+}
+
+void FirstApp::frameBufferResizeCallback(GLFWwindow *window, int width, int height) {
+    auto app = reinterpret_cast<FirstApp*>(window);
+    app->m_frameBufferResized = true;
 }
 
 void FirstApp::loadGameObjects() {

@@ -34,12 +34,12 @@ class GlorpRenderer {
         void endFrame();
         void beginSwapChainRenderPass(VkCommandBuffer commandBuffer);
         void endSwapChainRenderPass(VkCommandBuffer commandBuffer);
+        void recreateSwapChain();
 
 
     private:
         void createCommandBuffers();
         void freeCommandBuffers();
-        void recreateSwapChain();
     private:
         GlorpWindow &m_glorpWindow;
         GlorpDevice &m_glorpDevice;

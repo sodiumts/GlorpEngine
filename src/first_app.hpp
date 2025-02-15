@@ -39,6 +39,8 @@ class FirstApp {
         std::unique_ptr<GlorpDescriptorPool> cubemapPool {};
         std::shared_ptr<GlorpTexture> m_globalTexture;
         GlorpGameObject::Map m_gameObjects;
+        static void frameBufferResizeCallback(GLFWwindow *window, int width, int height);
+        bool m_frameBufferResized = false;
 };
 
 }
