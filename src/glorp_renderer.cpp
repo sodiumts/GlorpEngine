@@ -54,7 +54,7 @@ VkCommandBuffer GlorpRenderer::beginFrame() {
     assert(!m_isFrameStarted && "Cant begin a frame if frame is already in progress");
 
     auto result = m_glorpSwapChain->acquireNextImage(&m_currentImageIndex);
-    if (result == VK_ERROR_OUT_OF_DATE_KHR) {
+    if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
         recreateSwapChain();
         return nullptr;
     }
