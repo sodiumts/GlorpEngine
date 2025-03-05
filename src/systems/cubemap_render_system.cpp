@@ -43,6 +43,7 @@ void CubeMapRenderSystem::createPipeline(VkRenderPass renderPass) {
     
     PipelineConfigInfo pipelineConfig{};
     GlorpPipeline::defaultPipelineConfigInfo(pipelineConfig);
+    pipelineConfig.multisampleInfo.rasterizationSamples = m_glorpDevice.getSupportedSampleCount();
     pipelineConfig.renderPass = renderPass;
     pipelineConfig.pipelineLayout = m_pipelineLayout;
     pipelineConfig.depthStencilInfo.depthWriteEnable = VK_FALSE;

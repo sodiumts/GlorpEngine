@@ -75,6 +75,7 @@ void PointLightSystem::createPipeline(VkRenderPass renderPass) {
 
     GlorpPipeline::defaultPipelineConfigInfo(pipelineConfig);
     GlorpPipeline::enableAlphaBlending(pipelineConfig);
+    pipelineConfig.multisampleInfo.rasterizationSamples = m_glorpDevice.getSupportedSampleCount();
     pipelineConfig.attributeDescriptions.clear();
     pipelineConfig.bindingDescriptions.clear();
     pipelineConfig.renderPass = renderPass;

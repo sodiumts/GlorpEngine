@@ -8,6 +8,7 @@
 // std lib headers
 #include <vector>
 #include <memory>
+#include <vulkan/vulkan_core.h>
 
 namespace Glorp {
 
@@ -50,6 +51,7 @@ class GlorpSwapChain {
   void createDepthResources();
   void createRenderPass();
   void createFramebuffers();
+  void createColorResources();
   void createSyncObjects();
   void init();
 
@@ -73,6 +75,9 @@ class GlorpSwapChain {
   std::vector<VkImageView> m_depthImageViews;
   std::vector<VkImage> m_swapChainImages;
   std::vector<VkImageView> m_swapChainImageViews;
+  VkImage m_colorImage;
+  VkDeviceMemory m_colorImageMemory;
+  VkImageView m_colorImageView;
 
   GlorpDevice &m_device;
   VkExtent2D m_windowExtent;

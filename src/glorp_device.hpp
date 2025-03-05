@@ -47,6 +47,7 @@ class GlorpDevice {
   VkPhysicalDevice physicalDevice() { return m_physicalDevice; }
   VkPhysicalDevice getPhysicalDevice() { return m_physicalDevice; }
 
+
   SwapChainSupportDetails getSwapChainSupport() { return querySwapChainSupport(m_physicalDevice); }
   uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
   QueueFamilyIndices findPhysicalQueueFamilies() { return findQueueFamilies(m_physicalDevice); }
@@ -66,6 +67,8 @@ class GlorpDevice {
   void copyBufferToImage(
       VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, uint32_t layerCount);
 
+  VkSampleCountFlagBits getSupportedSampleCount() { return m_msaaSamples; }
+
   void createImageWithInfo(
       const VkImageCreateInfo &imageInfo,
       VkMemoryPropertyFlags properties,
@@ -82,6 +85,8 @@ class GlorpDevice {
   void pickPhysicalDevice();
   void createLogicalDevice();
   void createCommandPool();
+
+  VkSampleCountFlagBits getMaxSampleCount();
 
   // helper functions
   bool isDeviceSuitable(VkPhysicalDevice device);
@@ -104,6 +109,8 @@ class GlorpDevice {
   VkSurfaceKHR m_surface_;
   VkQueue m_graphicsQueue_;
   VkQueue m_presentQueue_;
+
+  VkSampleCountFlagBits m_msaaSamples = VK_SAMPLE_COUNT_1_BIT;
 
   const std::vector<const char *> m_validationLayers = {"VK_LAYER_KHRONOS_validation"};
   #ifdef APPLE

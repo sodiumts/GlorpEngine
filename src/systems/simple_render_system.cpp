@@ -51,6 +51,9 @@ void SimpleRenderSystem::createPipeline(VkRenderPass renderPass) {
     PipelineConfigInfo pipelineConfig{};
 
     GlorpPipeline::defaultPipelineConfigInfo(pipelineConfig);
+    pipelineConfig.multisampleInfo.rasterizationSamples = m_glorpDevice.getSupportedSampleCount();
+    pipelineConfig.multisampleInfo.sampleShadingEnable = VK_TRUE;
+    pipelineConfig.multisampleInfo.minSampleShading = .2f;
 
     pipelineConfig.renderPass = renderPass;
     pipelineConfig.pipelineLayout = m_pipelineLayout;

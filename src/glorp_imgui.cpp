@@ -42,7 +42,7 @@ void GlorpImgui::initImgui(VkRenderPass renderPass) {
     init_info.Subpass = 0;
     init_info.MinImageCount = GlorpSwapChain::MAX_FRAMES_IN_FLIGHT;
     init_info.ImageCount = GlorpSwapChain::MAX_FRAMES_IN_FLIGHT;
-    init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+    init_info.MSAASamples = m_glorpDevice.getSupportedSampleCount();
     ImGui_ImplVulkan_Init(&init_info);
 }
 
