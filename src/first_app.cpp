@@ -1,8 +1,10 @@
 #include "first_app.hpp"
 
+#include "glorp_3D_texture.hpp"
 #include "glorp_cubemap.hpp"
 #include "glorp_game_object.hpp"
 #include "glorp_imgui.hpp"
+#include "systems/cloud_render_system.hpp"
 #include "systems/cubemap_render_system.hpp"
 #include "systems/simple_render_system.hpp"
 #include "systems/point_light_system.hpp"
@@ -19,6 +21,7 @@
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#define GLM_FORCE_LEFT_HANDED
 #include <glm/glm.hpp>
 #include <glm/gtc/constants.hpp>
 #include <iostream>
@@ -41,10 +44,23 @@ FirstApp::FirstApp() {
     texturePool = GlorpDescriptorPool::Builder(m_glorpDevice)
         .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, GlorpSwapChain::MAX_FRAMES_IN_FLIGHT * 5 * m_gameObjects.size())
         .build();
-    //glfwSetWindowUserPointer(m_glorpWindow.getGLFWwindow(), this);
-    //glfwSetFramebufferSizeCallback(m_glorpWindow.getGLFWwindow(), frameBufferResizeCallback);
+
+    skyPool = GlorpDescriptorPool::Builder(m_glorpDevice)
+        .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, GlorpSwapChain::MAX_FRAMES_IN_FLIGHT)
+        .build();
 }
 FirstApp::~FirstApp() {}
+
+glm::vec3 getSunPosition(float time) {
+    const float PI = 3.141592653589793238462643383279502884197169;
+    float theta = PI * (-0.23 + 0.25 * sin(time * 0.1)); // change sun position as time passing
+    float phi = 2 * PI * (-0.25);
+    float sunposx = cos(phi);
+    float sunposy = sin(phi) * sin(theta);
+    float sunposz = sin(phi) * cos(theta);
+
+    return glm::vec3(sunposx, sunposy, sunposz);
+}
 
 void FirstApp::run() {
     std::vector<std::unique_ptr<GlorpBuffer>> uboBuffers(GlorpSwapChain::MAX_FRAMES_IN_FLIGHT);
@@ -64,6 +80,7 @@ void FirstApp::run() {
         .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS)
         .addBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
         .build();
+
 
     GlorpCubeMap cubemap = GlorpCubeMap(m_glorpDevice, {
         std::string(RESOURCE_LOCATIONS) + "cubemap/skybox/right.jpg",
@@ -87,6 +104,30 @@ void FirstApp::run() {
             .writeImage(1, &skyboxInfo)
             .build(globalDescriptorSets[i]);
     }
+
+    auto skySetLayout = GlorpDescriptorSetLayout::Builder(m_glorpDevice)
+        .addBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT) // Worley noise
+        .addBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT) // Erosion noise
+        .build();
+    
+    Glorp3DTexture worleyTexture{m_glorpDevice, "noiseTextures/noiseShape.jpg", 128};
+    Glorp3DTexture erosionTexture{m_glorpDevice, "noiseTextures/noiseErosion.jpg", 32};
+    
+    VkDescriptorImageInfo worleyTextureInfo {};
+    worleyTextureInfo.sampler = worleyTexture.getSampler();
+    worleyTextureInfo.imageView = worleyTexture.getImageView();
+    worleyTextureInfo.imageLayout = worleyTexture.getImageLayout();
+
+    VkDescriptorImageInfo erosionTextureInfo {};
+    erosionTextureInfo.sampler = erosionTexture.getSampler();
+    erosionTextureInfo.imageView = erosionTexture.getImageView();
+    erosionTextureInfo.imageLayout = erosionTexture.getImageLayout();
+    
+    VkDescriptorSet skyDescriptor;
+    GlorpDescriptorWriter(*skySetLayout, *skyPool)
+        .writeImage(0, &worleyTextureInfo)
+        .writeImage(1, &erosionTextureInfo)
+        .build(skyDescriptor);
 
     auto textureSetLayout = GlorpDescriptorSetLayout::Builder(m_glorpDevice)
         .addBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT) // Albedo
@@ -140,6 +181,7 @@ void FirstApp::run() {
     SimpleRenderSystem simpleRenderSystem{m_glorpDevice, m_glorpRenderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout(), textureSetLayout->getDescriptorSetLayout()};
     PointLightSystem pointLightSystem{m_glorpDevice, m_glorpRenderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout()};
     CubeMapRenderSystem cubemapRenderSystem{m_glorpDevice, m_glorpRenderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout()};
+    CloudRenderSystem cloudRenderSystem{m_glorpDevice, m_glorpRenderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout(), skySetLayout->getDescriptorSetLayout()};
     GlorpImgui glorpImgui{m_glorpDevice, m_glorpRenderer.getSwapChainRenderPass(), m_glorpWindow};
 
     GlorpCamera camera{};
@@ -170,9 +212,11 @@ void FirstApp::run() {
                     commandBuffer,
                     camera,
                     globalDescriptorSets[frameIndex],
+                    skyDescriptor,
                     m_gameObjects,
                     glorpImgui.getLightIntensity(),
                     glorpImgui.getRotationMultiplier(),
+                    glm::normalize(getSunPosition(0.5f)),
                     glorpImgui.useNormalMap,
                     glorpImgui.useAlbedoMap,
                     glorpImgui.useEmissiveMap,
@@ -182,8 +226,11 @@ void FirstApp::run() {
                 //update
                 GlobalUbo ubo{};
                 ubo.projection = camera.getProjection();
+                ubo.inverseProjection = glm::inverse(camera.getProjection());
                 ubo.view = camera.getView();
-                ubo.inverseView = camera.getInverseView();
+                ubo.inverseView = glm::inverse(camera.getView());
+                auto [x,y] = m_glorpWindow.getWidthHeight();
+                ubo.resolution = glm::vec2{x, y};
                 pointLightSystem.update(frameInfo, ubo);
 
                 uboBuffers[frameIndex]->writeToBuffer(&ubo);
@@ -193,6 +240,7 @@ void FirstApp::run() {
                 m_glorpRenderer.beginSwapChainRenderPass(commandBuffer);
 
 
+                //cloudRenderSystem.renderClouds(frameInfo);
                 simpleRenderSystem.renderGameObjects(frameInfo);
                 cubemapRenderSystem.renderCubemap(frameInfo);
                 pointLightSystem.render(frameInfo);

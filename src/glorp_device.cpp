@@ -497,10 +497,10 @@ void GlorpDevice::copyBufferToImage(
   region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
   region.imageSubresource.mipLevel = 0;
   region.imageSubresource.baseArrayLayer = 0;
-  region.imageSubresource.layerCount = layerCount;
+  region.imageSubresource.layerCount = 1;
 
   region.imageOffset = {0, 0, 0};
-  region.imageExtent = {width, height, 1};
+  region.imageExtent = {width, height, layerCount};
 
   vkCmdCopyBufferToImage(
       commandBuffer,
