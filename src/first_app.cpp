@@ -182,8 +182,8 @@ void FirstApp::run() {
                     glorpImgui.useEmissiveMap,
                     glorpImgui.useAOMap,
                     glorpImgui.lightPosition,
-                    320,
-                    240
+                    width,
+                    height
                 };
                 //update
                 GlobalUbo ubo{};
@@ -195,13 +195,13 @@ void FirstApp::run() {
                 uboBuffers[frameIndex]->writeToBuffer(&ubo);
                 uboBuffers[frameIndex]->flush();
 
+                ps1RenderSystem.renderGameObjects(frameInfo);
                 // render
                 m_glorpRenderer.beginSwapChainRenderPass(commandBuffer);
 
-
-                //simpleRenderSystem.renderGameObjects(frameInfo);
-                ps1RenderSystem.renderGameObjects(frameInfo);
                 //cubemapRenderSystem.renderCubemap(frameInfo);
+                ps1RenderSystem.renderToSwapchain(frameInfo);
+                //simpleRenderSystem.renderGameObjects(frameInfo);
                 //pointLightSystem.render(frameInfo);
 
                 glorpImgui.drawUI(frameInfo);

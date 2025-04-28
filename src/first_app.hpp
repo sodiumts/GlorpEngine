@@ -17,8 +17,8 @@
 namespace Glorp {
 class FirstApp {
     public:
-        static constexpr int WIDTH = 320;
-        static constexpr int HEIGHT = 240;
+        static constexpr int WIDTH = 1280;
+        static constexpr int HEIGHT = 960;
 
         FirstApp();
         ~FirstApp();

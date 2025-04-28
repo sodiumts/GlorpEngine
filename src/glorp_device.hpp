@@ -4,6 +4,7 @@
 
 // std lib headers
 #include <vector>
+#include <vulkan/vulkan_core.h>
 
 namespace Glorp {
 

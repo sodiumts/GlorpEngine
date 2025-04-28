@@ -28,6 +28,8 @@ class SimpleRenderSystem {
 
         std::unique_ptr<GlorpPipeline> m_glorpPipeline;
         VkPipelineLayout m_pipelineLayout;
+        std::unique_ptr<GlorpPipeline> m_quadPipeline;
+        
 };
 
 }

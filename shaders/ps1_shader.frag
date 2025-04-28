@@ -44,5 +44,7 @@ void main() {
     uv.y = 1.0 - uv.y; // flip the y for correct texture mapping for default gltf export on blender
 
     vec3 albedo = texture(albedoMap, uv).rgb;
+    
+        
     outColor = vec4(albedo, 1.0);
 }
