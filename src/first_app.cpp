@@ -4,6 +4,7 @@
 #include "glorp_game_object.hpp"
 #include "glorp_imgui.hpp"
 #include "systems/cubemap_render_system.hpp"
+#include "systems/ps1_render_system.hpp"
 #include "systems/simple_render_system.hpp"
 #include "systems/point_light_system.hpp"
 
@@ -107,38 +108,39 @@ void FirstApp::run() {
         albedoImageInfo.imageView = obj.material->albedoTexture->getImageView();
         albedoImageInfo.imageLayout = obj.material->albedoTexture->getImageLayout();
 
-        VkDescriptorImageInfo normalImageInfo {};
-        normalImageInfo.sampler = obj.material->normalTexture->getSampler();
-        normalImageInfo.imageView = obj.material->normalTexture->getImageView();
-        normalImageInfo.imageLayout = obj.material->normalTexture->getImageLayout();
+      //  VkDescriptorImageInfo normalImageInfo {};
+      //  normalImageInfo.sampler = obj.material->normalTexture->getSampler();
+      //  normalImageInfo.imageView = obj.material->normalTexture->getImageView();
+      //  normalImageInfo.imageLayout = obj.material->normalTexture->getImageLayout();
 
-        VkDescriptorImageInfo emissiveImageInfo {};
-        emissiveImageInfo.sampler = obj.material->emissiveTexture->getSampler();
-        emissiveImageInfo.imageView = obj.material->emissiveTexture->getImageView();
-        emissiveImageInfo.imageLayout = obj.material->emissiveTexture->getImageLayout();
+      //  VkDescriptorImageInfo emissiveImageInfo {};
+      //  emissiveImageInfo.sampler = obj.material->emissiveTexture->getSampler();
+      //  emissiveImageInfo.imageView = obj.material->emissiveTexture->getImageView();
+      //  emissiveImageInfo.imageLayout = obj.material->emissiveTexture->getImageLayout();
 
-        VkDescriptorImageInfo aoImageInfo {};
-        aoImageInfo.sampler = obj.material->aoTexture->getSampler();
-        aoImageInfo.imageView = obj.material->aoTexture->getImageView();
-        aoImageInfo.imageLayout = obj.material->aoTexture->getImageLayout();
+      //  VkDescriptorImageInfo aoImageInfo {};
+      //  aoImageInfo.sampler = obj.material->aoTexture->getSampler();
+      //  aoImageInfo.imageView = obj.material->aoTexture->getImageView();
+      //  aoImageInfo.imageLayout = obj.material->aoTexture->getImageLayout();
 
-        VkDescriptorImageInfo metallicImageInfo {};
-        metallicImageInfo.sampler = obj.material->metallicRoughnessTexture->getSampler();
-        metallicImageInfo.imageView = obj.material->metallicRoughnessTexture->getImageView();
-        metallicImageInfo.imageLayout = obj.material->metallicRoughnessTexture->getImageLayout();
+      //  VkDescriptorImageInfo metallicImageInfo {};
+      //  metallicImageInfo.sampler = obj.material->metallicRoughnessTexture->getSampler();
+      //  metallicImageInfo.imageView = obj.material->metallicRoughnessTexture->getImageView();
+      //  metallicImageInfo.imageLayout = obj.material->metallicRoughnessTexture->getImageLayout();
 
         GlorpDescriptorWriter(*textureSetLayout, *texturePool)
             .writeImage(0, &albedoImageInfo)
-            .writeImage(1, &normalImageInfo)
-            .writeImage(2, &emissiveImageInfo)
-            .writeImage(3, &aoImageInfo)
-            .writeImage(4, &metallicImageInfo)
+        //    .writeImage(1, &normalImageInfo)
+        //    .writeImage(2, &emissiveImageInfo)
+        //    .writeImage(3, &aoImageInfo)
+        //    .writeImage(4, &metallicImageInfo)
             .build(obj.descriptorSet);
     }
 
 
-    SimpleRenderSystem simpleRenderSystem{m_glorpDevice, m_glorpRenderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout(), textureSetLayout->getDescriptorSetLayout()};
-    PointLightSystem pointLightSystem{m_glorpDevice, m_glorpRenderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout()};
+  //  SimpleRenderSystem simpleRenderSystem{m_glorpDevice, m_glorpRenderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout(), textureSetLayout->getDescriptorSetLayout()};
+    PS1RenderSystem ps1RenderSystem{m_glorpDevice, m_glorpRenderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout(), textureSetLayout->getDescriptorSetLayout()};
+ //   PointLightSystem pointLightSystem{m_glorpDevice, m_glorpRenderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout()};
     CubeMapRenderSystem cubemapRenderSystem{m_glorpDevice, m_glorpRenderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout()};
     GlorpImgui glorpImgui{m_glorpDevice, m_glorpRenderer.getSwapChainRenderPass(), m_glorpWindow};
 
@@ -161,6 +163,8 @@ void FirstApp::run() {
             float aspect = m_glorpRenderer.getAspectRatio();
             camera.setPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 1000.f);
 
+
+            auto [width, height] = m_glorpWindow.getWidthHeight();
             if (auto commandBuffer = m_glorpRenderer.beginFrame()) {
                 int frameIndex = m_glorpRenderer.getFrameIndex();
 
@@ -177,14 +181,16 @@ void FirstApp::run() {
                     glorpImgui.useAlbedoMap,
                     glorpImgui.useEmissiveMap,
                     glorpImgui.useAOMap,
-                    glorpImgui.lightPosition
+                    glorpImgui.lightPosition,
+                    320,
+                    240
                 };
                 //update
                 GlobalUbo ubo{};
                 ubo.projection = camera.getProjection();
                 ubo.view = camera.getView();
                 ubo.inverseView = camera.getInverseView();
-                pointLightSystem.update(frameInfo, ubo);
+        //        pointLightSystem.update(frameInfo, ubo);
 
                 uboBuffers[frameIndex]->writeToBuffer(&ubo);
                 uboBuffers[frameIndex]->flush();
@@ -193,9 +199,10 @@ void FirstApp::run() {
                 m_glorpRenderer.beginSwapChainRenderPass(commandBuffer);
 
 
-                simpleRenderSystem.renderGameObjects(frameInfo);
-                cubemapRenderSystem.renderCubemap(frameInfo);
-                pointLightSystem.render(frameInfo);
+                //simpleRenderSystem.renderGameObjects(frameInfo);
+                ps1RenderSystem.renderGameObjects(frameInfo);
+                //cubemapRenderSystem.renderCubemap(frameInfo);
+                //pointLightSystem.render(frameInfo);
 
                 glorpImgui.drawUI(frameInfo);
 
@@ -215,10 +222,14 @@ void FirstApp::run() {
 
 void FirstApp::loadGameObjects() {
 
-    GlorpGameObject helmet = GlorpGameObject::createGameObjectFromAscii(m_glorpDevice, "models/DamagedHelmet/DamagedHelmet.gltf");
-    helmet.transform.translation = {.0f, .0f, .0f};
-    helmet.transform.scale = {1.f, 1.f, 1.f};
-    m_gameObjects.emplace(helmet.getId(), std::move(helmet));
+//    GlorpGameObject helmet = GlorpGameObject::createGameObjectFromAscii(m_glorpDevice, "models/DamagedHelmet/DamagedHelmet.gltf");
+//    helmet.transform.translation = {.0f, .0f, .0f};
+//    helmet.transform.scale = {1.f, 1.f, 1.f};
+//    m_gameObjects.emplace(helmet.getId(), std::move(helmet));
+      GlorpGameObject car = GlorpGameObject::createGameObjectFromBin(m_glorpDevice, "models/Car.glb");
+      car.transform.translation = {.0f, .0f, .0f};
+      car.transform.scale = {1.f, 1.f, 1.f};
+      m_gameObjects.emplace(car.getId(), std::move(car));
 
     std::vector<glm::vec3> lightColors{
         {1.f, .1f, .1f},

@@ -154,23 +154,29 @@ void GlorpGameObject::assembleGameObject(GlorpDevice &device, GlorpGameObject &g
 
         // Handle occlusionTexture
         {
-            const tinygltf::Texture& texture = gltfModel.textures[material.occlusionTexture.index];
-            const tinygltf::Image& image = gltfModel.images[texture.source];
-            materialComponent->aoTexture = std::make_shared<GlorpTexture>(device, image);
+            if (material.occlusionTexture.index != -1) {
+                const tinygltf::Texture& texture = gltfModel.textures[material.occlusionTexture.index];
+                const tinygltf::Image& image = gltfModel.images[texture.source];
+                materialComponent->aoTexture = std::make_shared<GlorpTexture>(device, image);
+            }
         }
 
         // Handle emissiveTexture
         {
-            const tinygltf::Texture& texture = gltfModel.textures[material.emissiveTexture.index];
-            const tinygltf::Image& image = gltfModel.images[texture.source];
-            materialComponent->emissiveTexture = std::make_shared<GlorpTexture>(device, image);
+            if(material.emissiveTexture.index != -1) {
+                const tinygltf::Texture& texture = gltfModel.textures[material.emissiveTexture.index];
+                const tinygltf::Image& image = gltfModel.images[texture.source];
+                materialComponent->emissiveTexture = std::make_shared<GlorpTexture>(device, image);
+            }
         }
 
         // Handle normalTexture
         {
-            const tinygltf::Texture& texture = gltfModel.textures[material.normalTexture.index];
-            const tinygltf::Image& image = gltfModel.images[texture.source];
-            materialComponent->normalTexture = std::make_shared<GlorpTexture>(device, image);
+            if(material.normalTexture.index != -1) {
+                const tinygltf::Texture& texture = gltfModel.textures[material.normalTexture.index];
+                const tinygltf::Image& image = gltfModel.images[texture.source];
+                materialComponent->normalTexture = std::make_shared<GlorpTexture>(device, image);
+            }
         }
     }
     gameObject.material = std::move(materialComponent);

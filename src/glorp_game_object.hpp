@@ -26,11 +26,11 @@ struct PointLightComponent {
 };
 
 struct MaterialComponent {
-    std::shared_ptr<GlorpTexture> albedoTexture;
-    std::shared_ptr<GlorpTexture> aoTexture;
-    std::shared_ptr<GlorpTexture> emissiveTexture;
-    std::shared_ptr<GlorpTexture> normalTexture;
-    std::shared_ptr<GlorpTexture> metallicRoughnessTexture;
+    std::shared_ptr<GlorpTexture> albedoTexture = nullptr;
+    std::shared_ptr<GlorpTexture> aoTexture = nullptr;
+    std::shared_ptr<GlorpTexture> emissiveTexture = nullptr;
+    std::shared_ptr<GlorpTexture> normalTexture = nullptr;
+    std::shared_ptr<GlorpTexture> metallicRoughnessTexture = nullptr;
 };
 
 class GlorpGameObject {

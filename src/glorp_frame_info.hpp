@@ -39,6 +39,9 @@ struct FrameInfo {
     bool useAOMap{true};
 
     float lightVerticalPosition;
+
+    int screenx;
+    int screeny;
 };
 
 }
