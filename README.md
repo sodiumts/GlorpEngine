@@ -13,6 +13,10 @@ Source : https://github.com/KhronosGroup/glTF-Sample-Assets/tree/main/Models/Dam
 
  - theblueturtle_ for Earlier version of model
 
+PS1 style car model:
+source: https://ggbot.itch.io/psx-style-cars
+&copy; GGBotNet [CC0 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/)
+
 ## Prerequisites For Building
 
 **Clone the repository using with recurse submodules**
