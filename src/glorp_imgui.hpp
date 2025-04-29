@@ -24,8 +24,8 @@ class GlorpImgui {
         bool useAOMap{true};
 
         bool fogEnabled = true;
-        float fogStart = 10.f;
-        float fogEnd = 100.f;
+        float fogStart = 3.f;
+        float fogEnd = 5.f;
         glm::vec3 fogColor = {0.42f, 0.42f, 0.45f};
 
 

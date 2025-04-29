@@ -15,6 +15,7 @@
 #include <GLFW/glfw3.h>
 #include <chrono>
 #include <cassert>
+#include <cstdint>
 #include <thread>
 #include <vulkan/vulkan_core.h>
 
@@ -152,7 +153,8 @@ void FirstApp::run() {
     
     std::thread renderThread([&] {
         auto currentTime = std::chrono::high_resolution_clock::now();
-
+        uint32_t oldScreenx = WIDTH;
+        uint32_t oldScreeny = HEIGHT;
         while(!m_glorpWindow.shouldClose()) { 
             auto newTime = std::chrono::high_resolution_clock::now();
             float frameTime = std::chrono::duration<float, std::chrono::seconds::period>(newTime - currentTime).count();
@@ -200,6 +202,14 @@ void FirstApp::run() {
 
                 uboBuffers[frameIndex]->writeToBuffer(&ubo);
                 uboBuffers[frameIndex]->flush();
+
+
+                if(oldScreenx != width || oldScreeny != height) {
+                    oldScreenx = width;
+                    oldScreeny = height;
+
+                    ps1RenderSystem.resizeScreen(frameInfo);
+                } 
 
                 ps1RenderSystem.renderGameObjects(frameInfo);
                 // render

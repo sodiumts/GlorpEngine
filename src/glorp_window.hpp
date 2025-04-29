@@ -22,7 +22,7 @@ class GlorpWindow {
         void resetWindowResizedFlag() { m_frameBufferResized = false; }
         void toggleFullscreen();
         GLFWwindow* getGLFWwindow() const { return m_window; }
-        std::tuple<int, int> getWidthHeight() { return std::make_tuple(m_height, m_width); }
+        std::tuple<int, int> getWidthHeight() { return std::make_tuple(m_width, m_height); }
     private:
         void InitWindow();
         static void frameBufferResizeCallback(GLFWwindow *window, int width, int height);

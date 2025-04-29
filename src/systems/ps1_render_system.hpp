@@ -5,6 +5,7 @@
 #include "glorp_device.hpp"
 #include "glorp_frame_info.hpp"
 
+#include <cstdint>
 #include <memory>
 #include <vulkan/vulkan_core.h>
 
@@ -31,10 +32,12 @@ class PS1RenderSystem {
 
         void renderGameObjects(FrameInfo &frameInfo);
         void renderToSwapchain(FrameInfo &frameInfo);
+        void resizeScreen(FrameInfo &frameInfo);
     private:
         void createPipelineLayout(VkDescriptorSetLayout globalSetLayout, VkDescriptorSetLayout textureSetLayout);
         void createPipeline(VkRenderPass renderPass);
-        void createOffscreenImage();
+        void createOffscreenImage(uint32_t width, uint32_t height);
+        void recreateOffscreenResources(uint32_t width, uint32_t height);
         void transitionImageLayout(VkImageLayout oldLayout, VkImageLayout newLayout, VkImage &offscreenImage, VkFormat format);
         void createQuadPipeline(VkRenderPass renderPass);
         void createQuadDescriptorSet();
@@ -68,6 +71,9 @@ class PS1RenderSystem {
         VkPipelineLayout m_quadPipelineLayout;
 
         std::unique_ptr<GlorpBuffer> scaleUBOBuffer;
+        
+        uint32_t m_offscreenImageWidth = 320;
+        uint32_t m_offscreenImageHeight = 240;
 };
 
 }

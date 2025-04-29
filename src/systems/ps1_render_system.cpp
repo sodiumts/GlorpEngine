@@ -24,8 +24,8 @@ struct PushFog {
     VkBool32 fogEnabled = VK_TRUE;
     float nearPlane{0.1f};
     float farPlane{1000.f};
-    float fogStart{5.f};
-    float fogEnd{10.f};
+    float fogStart{3.f};
+    float fogEnd{5.f};
     alignas(16) glm::vec3 fogColor{0.42f, 0.42f, 0.45f};
     alignas(16) glm::vec3 cameraPos;
 };
@@ -39,7 +39,7 @@ PS1RenderSystem::PS1RenderSystem(GlorpDevice &device, VkRenderPass renderPass, V
         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
     );
     scaleUBOBuffer->map();
-    createOffscreenImage();
+    createOffscreenImage(320, 240);
     createTextureSampler(); 
     createQuadDescriptorSet();
     createPipelineLayout(globalSetLayout, textureSetLayout);
@@ -157,17 +157,22 @@ VkPipelineLayout PS1RenderSystem::createQuadPipelineLayout() {
 }
 
 void PS1RenderSystem::createQuadDescriptorSet() {
-    m_quadDescriptorPool = GlorpDescriptorPool::Builder(m_glorpDevice)
-        .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1)
-        .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1)
-        .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1)
-        .build();
+    if (m_quadDescriptorPool) {
+        m_quadDescriptorPool->resetPool();
+    } else {
+        m_quadDescriptorPool = GlorpDescriptorPool::Builder(m_glorpDevice)
+            .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1)
+            .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1)
+            .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1)
+            .build();
+        m_quadDescriptorSetLayout = GlorpDescriptorSetLayout::Builder(m_glorpDevice)
+            .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT)
+            .addBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
+            .addBinding(2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
+            .build();
 
-    m_quadDescriptorSetLayout = GlorpDescriptorSetLayout::Builder(m_glorpDevice)
-        .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT)
-        .addBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
-        .addBinding(2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
-        .build();
+    }
+
 
     VkDescriptorImageInfo imageInfo{};
     imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -201,7 +206,7 @@ void PS1RenderSystem::renderGameObjects(FrameInfo &frameInfo) {
     renderPassInfo.renderPass = m_offscreenRenderPass;
     renderPassInfo.framebuffer = m_offscreenFramebuffer;
     renderPassInfo.renderArea.offset = {0, 0};
-    renderPassInfo.renderArea.extent = {320, 240};
+    renderPassInfo.renderArea.extent = {m_offscreenImageWidth, m_offscreenImageHeight};
 
     std::array<VkClearValue, 2> clearValues{};
     clearValues[0].color = {{0.01f, 0.01f, 0.01f, 1.0f}};
@@ -215,15 +220,15 @@ void PS1RenderSystem::renderGameObjects(FrameInfo &frameInfo) {
     VkViewport viewport{};
     viewport.x = 0.0f;
     viewport.y = 0.0f;
-    viewport.width = 320.0f;
-    viewport.height = 240.0f;
+    viewport.width = m_offscreenImageWidth;
+    viewport.height = m_offscreenImageHeight;
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
     vkCmdSetViewport(frameInfo.commandBuffer, 0, 1, &viewport);
 
     VkRect2D scissor{};
     scissor.offset = {0, 0};
-    scissor.extent = {320, 240};
+    scissor.extent = {m_offscreenImageWidth, m_offscreenImageHeight};
     vkCmdSetScissor(frameInfo.commandBuffer, 0, 1, &scissor);
 
     m_glorpPipeline->bind(frameInfo.commandBuffer);
@@ -245,7 +250,7 @@ void PS1RenderSystem::renderGameObjects(FrameInfo &frameInfo) {
         SimplePushConstantData push{};
         push.modelMatrix = obj.transform.mat4();
         push.normalMatrix = obj.transform.normalMatrix();
-        push.viewportSize = glm::vec2{320.0f, 240.0f};
+        push.viewportSize = glm::vec2{m_offscreenImageWidth, m_offscreenImageHeight};
 
         vkCmdPushConstants(frameInfo.commandBuffer, m_pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(SimplePushConstantData), &push);
 
@@ -256,8 +261,24 @@ void PS1RenderSystem::renderGameObjects(FrameInfo &frameInfo) {
     
 }
 
-void PS1RenderSystem::createOffscreenImage() {
-    VkExtent3D extent{320, 240, 1};
+void PS1RenderSystem::recreateOffscreenResources(uint32_t width, uint32_t height) {
+    vkDeviceWaitIdle(m_glorpDevice.device());
+    
+    vkDestroyImageView(m_glorpDevice.device(), m_colorImageView, nullptr);
+    vkDestroyImageView(m_glorpDevice.device(), m_depthImageView, nullptr);
+    vkDestroyImage(m_glorpDevice.device(), m_offscreenImage, nullptr);
+    vkDestroyImage(m_glorpDevice.device(), m_offscreenDepth, nullptr);
+    vkFreeMemory(m_glorpDevice.device(), m_offscreenImageMemory, nullptr);
+    vkFreeMemory(m_glorpDevice.device(), m_offscreenDepthMemory, nullptr);
+    vkDestroyFramebuffer(m_glorpDevice.device(), m_offscreenFramebuffer, nullptr);
+    vkDestroyRenderPass(m_glorpDevice.device(), m_offscreenRenderPass, nullptr);
+
+    createOffscreenImage(width, height);
+    createQuadDescriptorSet();
+}
+
+void PS1RenderSystem::createOffscreenImage(uint32_t width, uint32_t height) {
+    VkExtent3D extent{width, height, 1};
     VkImageCreateInfo colorImageInfo = {};
     colorImageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
     colorImageInfo.imageType = VK_IMAGE_TYPE_2D;
@@ -385,8 +406,8 @@ void PS1RenderSystem::createOffscreenImage() {
     fbInfo.renderPass = m_offscreenRenderPass;
     fbInfo.attachmentCount = static_cast<uint32_t>(fbAttachments.size());
     fbInfo.pAttachments = fbAttachments.data();
-    fbInfo.width = 320;
-    fbInfo.height = 240;
+    fbInfo.width = width;
+    fbInfo.height = height;
     fbInfo.layers = 1;
 
     if (vkCreateFramebuffer(m_glorpDevice.device(), &fbInfo, nullptr, &m_offscreenFramebuffer) != VK_SUCCESS) {
@@ -400,16 +421,39 @@ bool hasStencilComponent(VkFormat format) {
            format == VK_FORMAT_D16_UNORM_S8_UINT;
 }
 
-void PS1RenderSystem::renderToSwapchain(FrameInfo &frameInfo) {
-    m_quadPipeline->bind(frameInfo.commandBuffer);
+void PS1RenderSystem::resizeScreen(FrameInfo &frameInfo) {   
+    float newWidth = static_cast<uint32_t>(frameInfo.screenx / 4);
+    float newHeight = static_cast<uint32_t>(frameInfo.screeny / 4);
     
-    float scaleX = frameInfo.screenx / 320.0f;
-    float scaleY = frameInfo.screeny / 240.0f;
-    float scaleFactor = floor(glm::max(scaleX, scaleY));
+    newWidth = glm::max(newWidth, 1.f);
+    newHeight = glm::max(newHeight, 1.f);
+
+    if (newWidth != m_offscreenImageWidth || newHeight != m_offscreenImageHeight) {
+        m_offscreenImageWidth = newWidth;
+        m_offscreenImageHeight = newHeight;
+        recreateOffscreenResources(m_offscreenImageWidth, m_offscreenImageHeight);
+    }
+}
+
+
+void PS1RenderSystem::renderToSwapchain(FrameInfo &frameInfo) {
+    
+ //   float newWidth = static_cast<uint32_t>(frameInfo.screenx / 4);
+ //   float newHeight = static_cast<uint32_t>(frameInfo.screeny / 4);
+ //   
+ //   newWidth = glm::max(newWidth, 1.f);
+ //   newHeight = glm::max(newHeight, 1.f);
+
+ //   if (newWidth != m_offscreenImageWidth || newHeight != m_offscreenImageHeight) {
+ //       m_offscreenImageWidth = newWidth;
+ //       m_offscreenImageHeight = newHeight;
+ //       recreateOffscreenResources(m_offscreenImageWidth, m_offscreenImageHeight);
+ //   }
+    m_quadPipeline->bind(frameInfo.commandBuffer);
 
     ScaleUBO ubo{};
     ubo.windowSize = glm::vec2(frameInfo.screenx, frameInfo.screeny);
-    ubo.scaleFactor = scaleFactor;
+    ubo.scaleFactor = 4.0f;
     scaleUBOBuffer->writeToBuffer(&ubo);
     scaleUBOBuffer->flush();
 

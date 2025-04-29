@@ -28,10 +28,8 @@ float LinearizeDepth(float z) {
 }
 
 void main() {
-    vec2 uv = gl_FragCoord.xy;
+    vec2 uv = gl_FragCoord.xy / ubo.windowSize;
 
-    uv.x /= round(320.0f * ubo.scale);
-    uv.y /= round(240.0f * ubo.scale);
     
     vec3 albedo = texture(texSampler, uv).rgb;
   
@@ -54,7 +52,7 @@ void main() {
         3, -1, 2, -2
     );
     
-    vec2 texelCord = uv * vec2(640.0, 480.0);
+    vec2 texelCord = uv * vec2(round(ubo.windowSize.x / ubo.scale), round(ubo.windowSize.y / ubo.scale));
     float noise = float(ps1_dither_matrix[(int(texelCord.x) % 4) + 
                         (int(texelCord.y) % 4) * 4]);
 
