@@ -38,13 +38,11 @@ void main() {
     // undo perspective correction
     vec2 uv = fragUV / clipPos.w;
 
-
     uv = vec2(fract(uv.x), 1 - fract(uv.y)); // return uv to [0,1] so there is no texture repeating
 
     uv.y = 1.0 - uv.y; // flip the y for correct texture mapping for default gltf export on blender
 
     vec3 albedo = texture(albedoMap, uv).rgb;
-    
         
     outColor = vec4(albedo, 1.0);
 }

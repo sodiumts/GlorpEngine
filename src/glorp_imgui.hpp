@@ -23,6 +23,12 @@ class GlorpImgui {
         bool useEmissiveMap{true};
         bool useAOMap{true};
 
+        bool fogEnabled = true;
+        float fogStart = 10.f;
+        float fogEnd = 100.f;
+        glm::vec3 fogColor = {0.42f, 0.42f, 0.45f};
+
+
         float lightPosition{1.f};
     private:
         void initImgui(VkRenderPass renderPass);
@@ -41,5 +47,6 @@ class GlorpImgui {
         int m_frameCount = 0;
         float m_elapsedTime = 0.0f;
         std::chrono::steady_clock::time_point startTime = std::chrono::steady_clock::now();
-};
+
+    };
 }

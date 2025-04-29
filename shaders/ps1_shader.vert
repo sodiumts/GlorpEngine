@@ -25,7 +25,6 @@ layout(set = 0, binding = 0) uniform GlobalUbo {
     PointLight pointLights[10];
     int numLights;
 } ubo;
-
 layout(push_constant) uniform Push {
     mat4 modelMatrix; // Projection * view * model
     mat4 normalMatrix;
@@ -46,6 +45,7 @@ void main() {
     clipPos = vertex;
 
     gl_Position = vertex;
+
     fragPos = vertex.xyz;
     fragColor = color * clip.w; // For affine mapping 
     fragUV = uv * clip.w;

@@ -20,6 +20,16 @@ struct SimplePushConstantData {
     glm::vec2 viewportSize{1.f};
 };
 
+struct PushFog {
+    VkBool32 fogEnabled = VK_TRUE;
+    float nearPlane{0.1f};
+    float farPlane{1000.f};
+    float fogStart{5.f};
+    float fogEnd{10.f};
+    alignas(16) glm::vec3 fogColor{0.42f, 0.42f, 0.45f};
+    alignas(16) glm::vec3 cameraPos;
+};
+
 PS1RenderSystem::PS1RenderSystem(GlorpDevice &device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout, VkDescriptorSetLayout textureSetLayout): m_glorpDevice{device} {
     scaleUBOBuffer = std::make_unique<GlorpBuffer>(
         device,
@@ -122,14 +132,24 @@ void PS1RenderSystem::createQuadPipeline(VkRenderPass renderPass) {
 }
 
 VkPipelineLayout PS1RenderSystem::createQuadPipelineLayout() {
+    VkPushConstantRange pushConstantRange{};
+    pushConstantRange.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+    pushConstantRange.offset = 0;
+    pushConstantRange.size = sizeof(PushFog);
+
+
 
     VkDescriptorSetLayout descriptorSetLayout = m_quadDescriptorSetLayout->getDescriptorSetLayout();
     VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     pipelineLayoutInfo.setLayoutCount = 1;
     pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
+    pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
+    pipelineLayoutInfo.pushConstantRangeCount = 1;
     
     VkPipelineLayout pipelineLayout;
+
+    
     if (vkCreatePipelineLayout(m_glorpDevice.device(), &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS) {
         throw std::runtime_error("Failed to create quad pipeline layout!");
     }
@@ -140,11 +160,13 @@ void PS1RenderSystem::createQuadDescriptorSet() {
     m_quadDescriptorPool = GlorpDescriptorPool::Builder(m_glorpDevice)
         .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1)
         .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1)
+        .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1)
         .build();
 
     m_quadDescriptorSetLayout = GlorpDescriptorSetLayout::Builder(m_glorpDevice)
         .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT)
         .addBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
+        .addBinding(2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
         .build();
 
     VkDescriptorImageInfo imageInfo{};
@@ -152,10 +174,23 @@ void PS1RenderSystem::createQuadDescriptorSet() {
     imageInfo.imageView = m_colorImageView;
     imageInfo.sampler = m_textureSampler;
 
+    transitionImageLayout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, m_offscreenDepth, m_glorpDevice.findSupportedFormat(
+        {VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT},
+        VK_IMAGE_TILING_OPTIMAL,
+        VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT
+    ));
+
+    VkDescriptorImageInfo depthImageInfo{};
+    depthImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    depthImageInfo.imageView = m_depthImageView;
+    depthImageInfo.sampler = m_textureSampler;
+
+
     VkDescriptorBufferInfo bufferInfo = scaleUBOBuffer->descriptorInfo();
     GlorpDescriptorWriter(*m_quadDescriptorSetLayout, *m_quadDescriptorPool)
         .writeBuffer(0, &bufferInfo)
         .writeImage(1, &imageInfo)
+        .writeImage(2, &depthImageInfo)
         .build(m_quadDescriptorSet);
 }
 
@@ -252,7 +287,7 @@ void PS1RenderSystem::createOffscreenImage() {
     depthImageInfo.arrayLayers = 1;
     depthImageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     depthImageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
-    depthImageInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+    depthImageInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 
     m_glorpDevice.createImageWithInfo(depthImageInfo, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_offscreenDepth, m_offscreenDepthMemory);
     transitionImageLayout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, m_offscreenDepth, depthImageInfo.format);
@@ -307,11 +342,11 @@ void PS1RenderSystem::createOffscreenImage() {
         VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);;
     depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
     depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-    depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+    depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
     depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
     depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
     depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+    depthAttachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
     VkAttachmentReference colorRef{0, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL};
     VkAttachmentReference depthRef{1, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL};
@@ -377,6 +412,9 @@ void PS1RenderSystem::renderToSwapchain(FrameInfo &frameInfo) {
     ubo.scaleFactor = scaleFactor;
     scaleUBOBuffer->writeToBuffer(&ubo);
     scaleUBOBuffer->flush();
+
+    
+
     vkCmdBindDescriptorSets(
         frameInfo.commandBuffer,
         VK_PIPELINE_BIND_POINT_GRAPHICS,
@@ -385,12 +423,20 @@ void PS1RenderSystem::renderToSwapchain(FrameInfo &frameInfo) {
         0, nullptr
     );
     
+    PushFog push{};
+    push.cameraPos = frameInfo.camera.getPosition();
+    push.fogEnabled = frameInfo.fogInfo.fogEnabled;
+    push.fogColor = frameInfo.fogInfo.fogColor;
+    push.fogStart = frameInfo.fogInfo.fogStart;
+    push.fogEnd = frameInfo.fogInfo.fogEnd;
+
+    vkCmdPushConstants(frameInfo.commandBuffer, m_quadPipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushFog), &push);
     // Draw fullscreen triangle
     vkCmdDraw(frameInfo.commandBuffer, 3, 1, 0, 0);
 }
 
 void PS1RenderSystem::transitionImageLayout(VkImageLayout oldLayout, VkImageLayout newLayout, VkImage &offscreenImage, VkFormat format) {
-VkCommandBuffer commandBuffer = m_glorpDevice.beginSingleTimeCommands();
+    VkCommandBuffer commandBuffer = m_glorpDevice.beginSingleTimeCommands();
 
     VkImageMemoryBarrier barrier{};
     barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -404,13 +450,18 @@ VkCommandBuffer commandBuffer = m_glorpDevice.beginSingleTimeCommands();
     barrier.subresourceRange.levelCount = 1;
     barrier.subresourceRange.baseArrayLayer = 0;
     barrier.subresourceRange.layerCount = 1;
-
-    // Handle depth/stencil images
-    if (newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL) {
+    if (format == VK_FORMAT_D32_SFLOAT ||
+        format == VK_FORMAT_D16_UNORM  ||
+        format == VK_FORMAT_D16_UNORM_S8_UINT  ||
+        format == VK_FORMAT_D24_UNORM_S8_UINT  ||
+        format == VK_FORMAT_D32_SFLOAT_S8_UINT)
+    {
         barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
         if (hasStencilComponent(format)) {
             barrier.subresourceRange.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
         }
+    } else {
+        barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
     }
 
     VkPipelineStageFlags sourceStage;
@@ -433,6 +484,12 @@ VkCommandBuffer commandBuffer = m_glorpDevice.beginSingleTimeCommands();
         barrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
         sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
         destinationStage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+    } else if (oldLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL &&
+            newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
+        barrier.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+        sourceStage = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+        destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
     }
     else {
         std::cout << "old: " << oldLayout << "new: " << newLayout << std::endl;

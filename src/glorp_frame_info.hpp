@@ -3,6 +3,7 @@
 #include "glorp_camera.hpp"
 #include "glorp_game_object.hpp"
 
+#include <glm/fwd.hpp>
 #include <vulkan/vulkan.h>
 
 namespace Glorp {
@@ -23,6 +24,13 @@ struct GlobalUbo {
     int numLights;
 };
 
+typedef struct FogInfo {
+    bool fogEnabled;
+    float fogStart;
+    float fogEnd;
+    glm::vec3 fogColor;
+} FogInfo;
+
 struct FrameInfo {
     int frameIndex;
     float frameTime;
@@ -42,6 +50,8 @@ struct FrameInfo {
 
     int screenx;
     int screeny;
+
+    FogInfo fogInfo;
 };
 
 }

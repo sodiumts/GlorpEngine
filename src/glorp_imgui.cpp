@@ -94,6 +94,13 @@ void GlorpImgui::defaultWindow(FrameInfo &frameInfo) {
         ImGui::Checkbox("Use Emmisive", &useEmissiveMap);
         ImGui::Checkbox("Use AO", &useAOMap);
     }
+    if(ImGui::CollapsingHeader("Fog Control")) {
+        ImGui::Checkbox("Enable Fog", &fogEnabled);
+        ImGui::DragFloat("Fog Start", &fogStart);
+        ImGui::DragFloat("Fog End", &fogEnd);
+        
+        ImGui::ColorPicker3("Fog Color", (float *) &fogColor, ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_InputRGB | ImGuiColorEditFlags_NoSidePreview);
+    }
 
     ImGui::End();
 }

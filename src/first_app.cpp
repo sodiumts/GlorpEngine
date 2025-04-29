@@ -183,8 +183,14 @@ void FirstApp::run() {
                     glorpImgui.useAOMap,
                     glorpImgui.lightPosition,
                     width,
-                    height
-                };
+                    height,
+                    {
+                        glorpImgui.fogEnabled,
+                        glorpImgui.fogStart,
+                        glorpImgui.fogEnd,
+                        glorpImgui.fogColor
+                    }
+                    };
                 //update
                 GlobalUbo ubo{};
                 ubo.projection = camera.getProjection();
