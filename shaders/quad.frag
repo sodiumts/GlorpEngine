@@ -28,7 +28,7 @@ void main() {
 	    		3, -1, 2, -2
 		};
     
-    vec2 texelCord = uv * vec2(320.0, 240.0);
+    vec2 texelCord = uv * vec2(640.0, 480.0);
 
 
     float noise = float(ps1_dither_matrix[(int(texelCord.x) % 4) + (int(texelCord.y) % 4) * 4]);
