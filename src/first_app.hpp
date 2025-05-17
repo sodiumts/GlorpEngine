@@ -35,6 +35,8 @@ class FirstApp {
         GlorpDevice m_glorpDevice {m_glorpWindow};
         GlorpRenderer m_glorpRenderer {m_glorpWindow, m_glorpDevice};
 
+
+        id_t carRef;
         std::unique_ptr<GlorpDescriptorPool> globalPool {};
         std::unique_ptr<GlorpDescriptorPool> texturePool {};
         std::unique_ptr<GlorpDescriptorPool> cubemapPool {};

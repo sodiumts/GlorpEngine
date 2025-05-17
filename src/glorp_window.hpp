@@ -25,6 +25,7 @@ class GlorpWindow {
         std::tuple<int, int> getWidthHeight() { return std::make_tuple(m_width, m_height); }
         void setShouldClose(bool val) { m_shouldClose = val; }
         bool shouldClose() { return m_shouldClose; }
+        SDL_Gamepad* getGamepad(){ return m_gamepad; }
     private:
         void InitWindow();
         static void frameBufferResizeCallback(SDL_Window *window, int width, int height);
@@ -42,6 +43,7 @@ class GlorpWindow {
 
         bool m_frameBufferResized = false;
 
+        SDL_Gamepad* m_gamepad;
         bool fullscreen = false;
 
         const std::string m_windowName;

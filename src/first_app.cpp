@@ -1,16 +1,19 @@
 #include "first_app.hpp"
-
+#define GLM_ENABLE_EXPERIMENTAL
 #include "SDL3/SDL_events.h"
+#include "SDL3/SDL_gamepad.h"
+#include "SDL3/SDL_sensor.h"
 #include "glorp_cubemap.hpp"
 #include "glorp_game_object.hpp"
 #include "glorp_imgui.hpp"
+#include "gyro_controller.hpp"
 #include "imgui_impl_sdl3.h"
 #include "keyboard_movement_controller.hpp"
 #include "systems/cubemap_render_system.hpp"
 #include "systems/ps1_render_system.hpp"
 #include "systems/simple_render_system.hpp"
 #include "systems/point_light_system.hpp"
-
+#include "glm/gtx/string_cast.hpp"
 #include "glorp_camera.hpp"
 //#include "keyboard_movement_controller.hpp"
 #include "glorp_buffer.hpp"
@@ -18,6 +21,7 @@
 #include <chrono>
 #include <cassert>
 #include <cstdint>
+#include <stdexcept>
 #include <thread>
 #include <vulkan/vulkan_core.h>
 
@@ -148,8 +152,13 @@ void FirstApp::run() {
     GlorpCamera camera{};
 
     auto viewerObject = GlorpGameObject::createGameObject();
-    viewerObject.transform.translation.z = -2.5f;
+    viewerObject.transform.translation.z = 5.f;
+    //viewerObject.transform.rotation = glm::quatLookAt(glm::vec3(0.0f, 0.0f, 0.0f),glm::vec3(0.0f, -1.0f, 0.0f));
+
+
     KeyboardMovementController cameraController(m_glorpWindow);
+    GyroController gyroController(m_glorpWindow);
+
 
     auto currentTime = std::chrono::high_resolution_clock::now();
     uint32_t oldScreenx = WIDTH;
@@ -182,12 +191,15 @@ void FirstApp::run() {
                     m_glorpWindow.setShouldClose(true);
 
         }
+        SDL_UpdateGamepads();
+
+        gyroController.handleGyroMovement(frameTime, m_gameObjects.at(carRef)); 
 
         cameraController.handleKeyboardMovement(frameTime, viewerObject);
         //cameraController.moveInPlaneXZ(frameTime, viewerObject);
         camera.setViewYXZ(viewerObject.transform.translation, viewerObject.transform.rotation);
         float aspect = m_glorpRenderer.getAspectRatio();
-        camera.setPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 1000.f);
+        camera.setPerspectiveProjection(glm::radians(60.f), aspect, 0.1f, 1000.f);
 
         auto [width, height] = m_glorpWindow.getWidthHeight();
         if (auto commandBuffer = m_glorpRenderer.beginFrame()) {
@@ -238,7 +250,7 @@ void FirstApp::run() {
             // render
             m_glorpRenderer.beginSwapChainRenderPass(commandBuffer);
 
-            //cubemapRenderSystem.renderCubemap(frameInfo);
+            cubemapRenderSystem.renderCubemap(frameInfo);
             ps1RenderSystem.renderToSwapchain(frameInfo);
             //simpleRenderSystem.renderGameObjects(frameInfo);
             //pointLightSystem.render(frameInfo);
@@ -259,25 +271,27 @@ void FirstApp::loadGameObjects() {
 //    helmet.transform.scale = {1.f, 1.f, 1.f};
 //    m_gameObjects.emplace(helmet.getId(), std::move(helmet));
       GlorpGameObject car = GlorpGameObject::createGameObjectFromBin(m_glorpDevice, "models/Car.glb");
-      car.transform.translation = {.0f, .0f, .0f};
+      carRef = car.getId();
+      car.transform.translation = {0.f, .0f, .0f};
       car.transform.scale = {1.f, 1.f, 1.f};
+      car.transform.rotation = glm::angleAxis(glm::pi<float>(), glm::vec3(0.0f, 1.0f, 0.0f));
       m_gameObjects.emplace(car.getId(), std::move(car));
 
-    std::vector<glm::vec3> lightColors{
-        {1.f, .1f, .1f},
-        {.1f, .1f, 1.f},
-        {.1f, 1.f, .1f},
-        {1.f, 1.f, .1f},
-        {.1f, 1.f, 1.f},
-        {1.f, 1.f, 1.f}
-    };
+ //   std::vector<glm::vec3> lightColors{
+ //       {1.f, .1f, .1f},
+ //       {.1f, .1f, 1.f},
+ //       {.1f, 1.f, .1f},
+ //       {1.f, 1.f, .1f},
+ //       {.1f, 1.f, 1.f},
+ //       {1.f, 1.f, 1.f}
+ //   };
 
-    for (int i = 0; i < lightColors.size(); i++) {
-        auto pl = GlorpGameObject::makePointLight(0.5f);
-        pl.color = lightColors[i];
-        auto rotateLight = glm::rotate(glm::mat4(1.f), (i * glm::two_pi<float>()) / lightColors.size(), {0.f, -1.f, 0.f});
-        pl.transform.translation = glm::vec3(rotateLight * glm::vec4(-1.f, -1.f, -1.f, 1.f));
-        m_gameObjects.emplace(pl.getId(), std::move(pl));
-    }
+ //   for (int i = 0; i < lightColors.size(); i++) {
+ //       auto pl = GlorpGameObject::makePointLight(0.5f);
+ //       pl.color = lightColors[i];
+ //       auto rotateLight = glm::rotate(glm::mat4(1.f), (i * glm::two_pi<float>()) / lightColors.size(), {0.f, -1.f, 0.f});
+ //       pl.transform.translation = glm::vec3(rotateLight * glm::vec4(-1.f, -1.f, -1.f, 1.f));
+ //       m_gameObjects.emplace(pl.getId(), std::move(pl));
+ //   }
 }
 }

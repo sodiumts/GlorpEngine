@@ -2,7 +2,9 @@
 
 #include "glorp_model.hpp"
 
+#include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/quaternion.hpp>
 #include "glorp_texture.hpp"
 #include <memory>
 #include <unordered_map>
@@ -15,7 +17,7 @@ namespace Glorp {
 struct TransformComponent {
     glm::vec3 translation {};
     glm::vec3 scale{1.f, 1.f, 1.f};
-    glm::vec3 rotation {};
+    glm::quat rotation{};
 
     glm::mat4 mat4();
     glm::mat3 normalMatrix();

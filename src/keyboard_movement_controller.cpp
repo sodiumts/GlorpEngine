@@ -24,22 +24,26 @@ void KeyboardMovementController::updateMouseState() {
     }
 }
 
-void KeyboardMovementController::handleMouseInput(GlorpGameObject &gameObject) {
+void KeyboardMovementController::handleMouseInput(GlorpGameObject &cameraObject) {
     float deltaX, deltaY;
     SDL_GetRelativeMouseState(&deltaX, &deltaY);
 
-    gameObject.transform.rotation.y += deltaX * m_mouseSensitivity;
-    gameObject.transform.rotation.x -= deltaY * m_mouseSensitivity;
+    m_yaw += -deltaX * m_mouseSensitivity;
+    m_pitch += deltaY * m_mouseSensitivity;
 
-    gameObject.transform.rotation.x = glm::clamp(gameObject.transform.rotation.x, -1.5f, 1.5f);
-    gameObject.transform.rotation.y = glm::mod(gameObject.transform.rotation.y, glm::two_pi<float>());
+    const float maxPitch = glm::radians(89.0f);
+    m_pitch = glm::clamp(m_pitch, -maxPitch, +maxPitch);
+
+    glm::quat qYaw   = glm::angleAxis(m_yaw,   glm::vec3(0.0f, 1.0f, 0.0f));
+    glm::quat qPitch = glm::angleAxis(m_pitch, glm::vec3(1.0f, 0.0f, 0.0f));
+    cameraObject.transform.rotation = glm::normalize(qYaw * qPitch);
 }
-
 void KeyboardMovementController::handleKeyboardMovement(float dt, GlorpGameObject &gameObject) {
-    float yaw = gameObject.transform.rotation.y;
-    const glm::vec3 forwardDir{sin(yaw), 0.f, cos(yaw)};
-    const glm::vec3 rightDir{forwardDir.z, 0.f, -forwardDir.x};
+    glm::vec3 forwardRaw = gameObject.transform.rotation * glm::vec3(0,0,-1);
+    glm::vec3 rightDir = gameObject.transform.rotation * glm::vec3(1,0,0);
     const glm::vec3 upDir{0.f, -1.f, 0.f};
+    glm::vec3 forwardDir = forwardRaw - glm::dot(forwardRaw, upDir) * upDir;
+    forwardDir = glm::normalize(forwardDir);
     
     glm::vec3 moveDir{0.f};
     int numkeys;

@@ -26,5 +26,7 @@ class KeyboardMovementController {
         bool m_cursorPending = false;
         bool toggleFullscreenPending = false;
         GlorpWindow &m_glorpWindow;
+        float m_yaw = 0.0f;
+        float m_pitch = 0.0f;
     };
 }
