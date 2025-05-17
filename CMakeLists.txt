@@ -39,47 +39,17 @@ endif()
 
 include(FetchContent)
 
-if (DEFINED GLFW_PATH)
-    message(STATUS "Using GLFW path specified in .env")
-    set(GLFW_INCLUDE_DIRS "${GLFW_PATH}/include")
-    if (MSVC)
-        set(GLFW_LIB "${GLFW_PATH}/lib-vc2019")
-    elseif (CMAKE_GENERATOR STREQUAL "MinGW Makefiles")
-        message(STATUS "Using MinGW")
-        set(GLFW_LIB "${GLFW_PATH}/lib-mingw-w64")
-    else()
-        set(GLFW_LIB "${GLFW_PATH}/lib-vc2022")
-    endif()
 
-else()
-    find_package(glfw3 3.4 REQUIRED)
-    get_target_property(GLFW_LIB_PATH glfw IMPORTED_LOCATION)
-    if (NOT glfw3_FOUND)
-        message(STATUS "GLFW not found, using FetchContent to download it")
-        FetchContent_Declare(
-            glfw
-            GIT_REPOSITORY https://github.com/glfw/glfw.git
-            GIT_TAG        3.4
-        )
-        FetchContent_MakeAvailable(glfw)
-        set(GLFW_LIB glfw)
-    else()
-        set(GLFW_LIB glfw3)
-        message(STATUS "Found GLFW")
-    endif()
-endif()
 
-if (NOT GLFW_LIB)
-    message(FATAL_ERROR "Could not find GLFW library!")
-else()
-    message(STATUS "Using GLFW library at: ${GLFW_LIB}")
-endif()
+
+add_subdirectory(external/SDL EXCLUDE_FROM_ALL)
+
 
 file(GLOB_RECURSE SOURCES ${PROJECT_SOURCE_DIR}/src/*.cpp)
 file(GLOB IMGUI_SOURCES
     ${PROJECT_SOURCE_DIR}/external/imgui/*.cpp
     ${PROJECT_SOURCE_DIR}/external/imgui/backends/imgui_impl_vulkan.cpp
-    ${PROJECT_SOURCE_DIR}/external/imgui/backends/imgui_impl_glfw.cpp
+    ${PROJECT_SOURCE_DIR}/external/imgui/backends/imgui_impl_sdl3.cpp
 )
 
 
@@ -108,7 +78,7 @@ if (WIN32)
         ${GLFW_LIB}
     )
 
-    target_link_libraries(${PROJECT_NAME} glfw3 vulkan-1)
+    target_link_libraries(${PROJECT_NAME} SDL3::SDL3 vulkan-1)
 
 elseif(APPLE)
     set(CMAKE_OSX_DEPLOYMENT_TARGET 11)
@@ -221,7 +191,7 @@ elseif(APPLE)
         ${PROJECT_SOURCE_DIR}/src
     )
 
-    target_link_libraries(${PROJECT_NAME} glfw Vulkan::Vulkan)
+    target_link_libraries(${PROJECT_NAME} SDL3::SDL3 Vulkan::Vulkan)
     target_compile_definitions(GlorpEngine PRIVATE APPLE)
 
 elseif (UNIX)
@@ -235,7 +205,7 @@ elseif (UNIX)
         ${PROJECT_SOURCE_DIR}/src
     )
 
-    target_link_libraries(${PROJECT_NAME} glfw ${Vulkan_LIBRARIES})
+    target_link_libraries(${PROJECT_NAME} SDL3::SDL3 ${Vulkan_LIBRARIES})
 endif()
 
 

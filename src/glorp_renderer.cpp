@@ -15,7 +15,6 @@ void GlorpRenderer::recreateSwapChain() {
     auto extent = m_glorpWindow.getExtent();
     while(extent.width == 0 || extent.height == 0) {
         extent = m_glorpWindow.getExtent();
-        glfwWaitEvents();
     }
 
     vkDeviceWaitIdle(m_glorpDevice.device());

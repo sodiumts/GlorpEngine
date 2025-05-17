@@ -265,11 +265,10 @@ bool GlorpDevice::checkValidationLayerSupport() {
 }
 
 std::vector<const char *> GlorpDevice::getRequiredExtensions() {
-  uint32_t glfwExtensionCount = 0;
-  const char **glfwExtensions;
-  glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+  uint32_t sdl_extensions_count = 0;
+  const char* const* sdl_extensions = SDL_Vulkan_GetInstanceExtensions(&sdl_extensions_count);
 
-  std::vector<const char *> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
+  std::vector<const char *> extensions(sdl_extensions, sdl_extensions + sdl_extensions_count);
   #ifdef APPLE
   extensions.push_back("VK_KHR_portability_enumeration");
   extensions.push_back("VK_KHR_get_physical_device_properties2");

@@ -2,7 +2,7 @@
 #include "glorp_swap_chain.hpp"
 
 #include "imgui.h"
-#include "imgui_impl_glfw.h"
+#include "imgui_impl_sdl3.h"
 #include "imgui_impl_vulkan.h"
 
 #include <cmath>
@@ -15,7 +15,7 @@ GlorpImgui::GlorpImgui(GlorpDevice &device, VkRenderPass renderPass, GlorpWindow
 
 GlorpImgui::~GlorpImgui() {
     ImGui_ImplVulkan_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
+    ImGui_ImplSDL3_Shutdown();
     ImGui::DestroyContext();
 }
 
@@ -28,7 +28,7 @@ void GlorpImgui::initImgui(VkRenderPass renderPass) {
 
     ImGui::CreateContext();
 
-    ImGui_ImplGlfw_InitForVulkan(m_glorpWindow.getGLFWwindow(), true);
+    ImGui_ImplSDL3_InitForVulkan(m_glorpWindow.getSDLWindow());
 
     ImGui_ImplVulkan_InitInfo init_info = {};
     init_info.Instance = m_glorpDevice.instance();
@@ -49,7 +49,7 @@ void GlorpImgui::initImgui(VkRenderPass renderPass) {
 void GlorpImgui::drawUI(FrameInfo &frameInfo) {
     updateFPS();
     ImGui_ImplVulkan_NewFrame();
-    ImGui_ImplGlfw_NewFrame();
+    ImGui_ImplSDL3_NewFrame();
     ImGui::NewFrame();
     defaultWindow(frameInfo);
 

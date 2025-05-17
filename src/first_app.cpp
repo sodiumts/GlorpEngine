@@ -1,18 +1,20 @@
 #include "first_app.hpp"
 
+#include "SDL3/SDL_events.h"
 #include "glorp_cubemap.hpp"
 #include "glorp_game_object.hpp"
 #include "glorp_imgui.hpp"
+#include "imgui_impl_sdl3.h"
+#include "keyboard_movement_controller.hpp"
 #include "systems/cubemap_render_system.hpp"
 #include "systems/ps1_render_system.hpp"
 #include "systems/simple_render_system.hpp"
 #include "systems/point_light_system.hpp"
 
 #include "glorp_camera.hpp"
-#include "keyboard_movement_controller.hpp"
+//#include "keyboard_movement_controller.hpp"
 #include "glorp_buffer.hpp"
 
-#include <GLFW/glfw3.h>
 #include <chrono>
 #include <cassert>
 #include <cstdint>
@@ -43,8 +45,6 @@ FirstApp::FirstApp() {
     texturePool = GlorpDescriptorPool::Builder(m_glorpDevice)
         .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, GlorpSwapChain::MAX_FRAMES_IN_FLIGHT * 5 * m_gameObjects.size())
         .build();
-    //glfwSetWindowUserPointer(m_glorpWindow.getGLFWwindow(), this);
-    //glfwSetFramebufferSizeCallback(m_glorpWindow.getGLFWwindow(), frameBufferResizeCallback);
 }
 FirstApp::~FirstApp() {}
 
@@ -150,90 +150,106 @@ void FirstApp::run() {
     auto viewerObject = GlorpGameObject::createGameObject();
     viewerObject.transform.translation.z = -2.5f;
     KeyboardMovementController cameraController(m_glorpWindow);
-    
-    std::thread renderThread([&] {
-        auto currentTime = std::chrono::high_resolution_clock::now();
-        uint32_t oldScreenx = WIDTH;
-        uint32_t oldScreeny = HEIGHT;
-        while(!m_glorpWindow.shouldClose()) { 
-            auto newTime = std::chrono::high_resolution_clock::now();
-            float frameTime = std::chrono::duration<float, std::chrono::seconds::period>(newTime - currentTime).count();
-            currentTime = newTime;
 
-            cameraController.moveInPlaneXZ(frameTime, viewerObject);
-            camera.setViewYXZ(viewerObject.transform.translation, viewerObject.transform.rotation);
-            float aspect = m_glorpRenderer.getAspectRatio();
-            camera.setPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 1000.f);
+    auto currentTime = std::chrono::high_resolution_clock::now();
+    uint32_t oldScreenx = WIDTH;
+    uint32_t oldScreeny = HEIGHT;
+    while(!m_glorpWindow.shouldClose()) { 
+        auto newTime = std::chrono::high_resolution_clock::now();
+        float frameTime = std::chrono::duration<float, std::chrono::seconds::period>(newTime - currentTime).count();
+        currentTime = newTime;
 
-
-            auto [width, height] = m_glorpWindow.getWidthHeight();
-            if (auto commandBuffer = m_glorpRenderer.beginFrame()) {
-                int frameIndex = m_glorpRenderer.getFrameIndex();
-
-                FrameInfo frameInfo {
-                    frameIndex,
-                    frameTime,
-                    commandBuffer,
-                    camera,
-                    globalDescriptorSets[frameIndex],
-                    m_gameObjects,
-                    glorpImgui.getLightIntensity(),
-                    glorpImgui.getRotationMultiplier(),
-                    glorpImgui.useNormalMap,
-                    glorpImgui.useAlbedoMap,
-                    glorpImgui.useEmissiveMap,
-                    glorpImgui.useAOMap,
-                    glorpImgui.lightPosition,
-                    width,
-                    height,
-                    {
-                        glorpImgui.fogEnabled,
-                        glorpImgui.fogStart,
-                        glorpImgui.fogEnd,
-                        glorpImgui.fogColor
-                    }
-                    };
-                //update
-                GlobalUbo ubo{};
-                ubo.projection = camera.getProjection();
-                ubo.view = camera.getView();
-                ubo.inverseView = camera.getInverseView();
-        //        pointLightSystem.update(frameInfo, ubo);
-
-                uboBuffers[frameIndex]->writeToBuffer(&ubo);
-                uboBuffers[frameIndex]->flush();
+        SDL_Event event;
+        while (SDL_PollEvent(&event))
+        {
+            ImGui_ImplSDL3_ProcessEvent(&event);
+            switch (event.type) {
+                case SDL_EVENT_QUIT:
+                    m_glorpWindow.setShouldClose(true);
+                    break;
+                case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
+                    if (event.window.windowID == SDL_GetWindowID(m_glorpWindow.getSDLWindow()))
+                        m_glorpWindow.setShouldClose(true);
+                    break;
+                case SDL_EVENT_WINDOW_RESIZED:
+                    m_glorpWindow.windowResize();
+                    break;
 
 
-                if(oldScreenx != width || oldScreeny != height) {
-                    oldScreenx = width;
-                    oldScreeny = height;
-
-                    ps1RenderSystem.resizeScreen(frameInfo);
-                } 
-
-                ps1RenderSystem.renderGameObjects(frameInfo);
-                // render
-                m_glorpRenderer.beginSwapChainRenderPass(commandBuffer);
-
-                //cubemapRenderSystem.renderCubemap(frameInfo);
-                ps1RenderSystem.renderToSwapchain(frameInfo);
-                //simpleRenderSystem.renderGameObjects(frameInfo);
-                //pointLightSystem.render(frameInfo);
-
-                glorpImgui.drawUI(frameInfo);
-
-                m_glorpRenderer.endSwapChainRenderPass(commandBuffer);
-                m_glorpRenderer.endFrame();
             }
+            if (event.type == SDL_EVENT_QUIT)
+                if (event.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED && event.window.windowID == SDL_GetWindowID(m_glorpWindow.getSDLWindow()))
+                    m_glorpWindow.setShouldClose(true);
+
+        }
+
+        cameraController.handleKeyboardMovement(frameTime, viewerObject);
+        //cameraController.moveInPlaneXZ(frameTime, viewerObject);
+        camera.setViewYXZ(viewerObject.transform.translation, viewerObject.transform.rotation);
+        float aspect = m_glorpRenderer.getAspectRatio();
+        camera.setPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 1000.f);
+
+        auto [width, height] = m_glorpWindow.getWidthHeight();
+        if (auto commandBuffer = m_glorpRenderer.beginFrame()) {
+            int frameIndex = m_glorpRenderer.getFrameIndex();
+
+            FrameInfo frameInfo {
+                frameIndex,
+                frameTime,
+                commandBuffer,
+                camera,
+                globalDescriptorSets[frameIndex],
+                m_gameObjects,
+                glorpImgui.getLightIntensity(),
+                glorpImgui.getRotationMultiplier(),
+                glorpImgui.useNormalMap,
+                glorpImgui.useAlbedoMap,
+                glorpImgui.useEmissiveMap,
+                glorpImgui.useAOMap,
+                glorpImgui.lightPosition,
+                width,
+                height,
+                {
+                    glorpImgui.fogEnabled,
+                    glorpImgui.fogStart,
+                    glorpImgui.fogEnd,
+                    glorpImgui.fogColor
+                }
+            };
+            //update
+            GlobalUbo ubo{};
+            ubo.projection = camera.getProjection();
+            ubo.view = camera.getView();
+            ubo.inverseView = camera.getInverseView();
+            //        pointLightSystem.update(frameInfo, ubo);
+
+            uboBuffers[frameIndex]->writeToBuffer(&ubo);
+            uboBuffers[frameIndex]->flush();
+
+
+            if(oldScreenx != width || oldScreeny != height) {
+                oldScreenx = width;
+                oldScreeny = height;
+
+                ps1RenderSystem.resizeScreen(frameInfo);
+            } 
+
+            ps1RenderSystem.renderGameObjects(frameInfo);
+            // render
+            m_glorpRenderer.beginSwapChainRenderPass(commandBuffer);
+
+            //cubemapRenderSystem.renderCubemap(frameInfo);
+            ps1RenderSystem.renderToSwapchain(frameInfo);
+            //simpleRenderSystem.renderGameObjects(frameInfo);
+            //pointLightSystem.render(frameInfo);
+
+            glorpImgui.drawUI(frameInfo);
+
+            m_glorpRenderer.endSwapChainRenderPass(commandBuffer);
+            m_glorpRenderer.endFrame();
         }
         vkDeviceWaitIdle(m_glorpDevice.device());
-    });
-
-    // Polling loop
-    while(!m_glorpWindow.shouldClose()) {
-        glfwPollEvents();
     }
-    renderThread.join();
 }
 
 void FirstApp::loadGameObjects() {

@@ -1,9 +1,10 @@
 #pragma once
 
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_vulkan.h>
 #include <string>
 #include <tuple>
+#include <vulkan/vulkan_core.h>
 
 namespace Glorp {
 
@@ -15,17 +16,18 @@ class GlorpWindow {
         GlorpWindow(const GlorpWindow&) = delete;
         GlorpWindow &operator=(const GlorpWindow &) = delete;
 
-        bool shouldClose() { return glfwWindowShouldClose(m_window); };
         void createWindowSurface(VkInstance instance, VkSurfaceKHR * surface);
         VkExtent2D getExtent() { return {static_cast<uint32_t>(m_width), static_cast<uint32_t>(m_height)}; }
+        void windowResize();
         bool wasWindowResized() { return m_frameBufferResized; }
         void resetWindowResizedFlag() { m_frameBufferResized = false; }
-        void toggleFullscreen();
-        GLFWwindow* getGLFWwindow() const { return m_window; }
+        SDL_Window* getSDLWindow() const { return m_window; }
         std::tuple<int, int> getWidthHeight() { return std::make_tuple(m_width, m_height); }
+        void setShouldClose(bool val) { m_shouldClose = val; }
+        bool shouldClose() { return m_shouldClose; }
     private:
         void InitWindow();
-        static void frameBufferResizeCallback(GLFWwindow *window, int width, int height);
+        static void frameBufferResizeCallback(SDL_Window *window, int width, int height);
     
     private:
         int m_height;
@@ -35,12 +37,14 @@ class GlorpWindow {
         int m_windowedWidth;
         int m_windowedPositionX;
         int m_windowedPositionY;
+        
+        bool m_shouldClose = false;
 
         bool m_frameBufferResized = false;
 
         bool fullscreen = false;
 
         const std::string m_windowName;
-        GLFWwindow *m_window;
+        SDL_Window* m_window;
 };
 }
