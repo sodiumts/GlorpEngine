@@ -183,17 +183,22 @@ void FirstApp::run() {
                 case SDL_EVENT_WINDOW_RESIZED:
                     m_glorpWindow.windowResize();
                     break;
-
-
+                case SDL_EVENT_GAMEPAD_ADDED:
+                    m_glorpWindow.setupGamepad(event.gdevice); 
+                    break;
+                case SDL_EVENT_GAMEPAD_REMOVED:
+                    m_glorpWindow.destroyGamepad(event.gdevice);
+                    break;
             }
             if (event.type == SDL_EVENT_QUIT)
                 if (event.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED && event.window.windowID == SDL_GetWindowID(m_glorpWindow.getSDLWindow()))
                     m_glorpWindow.setShouldClose(true);
 
         }
-        SDL_UpdateGamepads();
 
-        gyroController.handleGyroMovement(frameTime, m_gameObjects.at(carRef)); 
+
+        if (m_glorpWindow.getGamepad() != NULL && m_glorpWindow.getGyroSupport())
+            gyroController.handleGyroMovement(frameTime, m_gameObjects.at(carRef)); 
 
         cameraController.handleKeyboardMovement(frameTime, viewerObject);
         //cameraController.moveInPlaneXZ(frameTime, viewerObject);

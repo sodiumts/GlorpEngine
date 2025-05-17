@@ -1,5 +1,6 @@
 #pragma once
 
+#include "SDL3/SDL_events.h"
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_vulkan.h>
 #include <string>
@@ -26,6 +27,9 @@ class GlorpWindow {
         void setShouldClose(bool val) { m_shouldClose = val; }
         bool shouldClose() { return m_shouldClose; }
         SDL_Gamepad* getGamepad(){ return m_gamepad; }
+        void setupGamepad(SDL_GamepadDeviceEvent event);
+        void destroyGamepad(SDL_GamepadDeviceEvent event);
+        bool getGyroSupport() { return m_gamepadSupportsGyro; }
     private:
         void InitWindow();
         static void frameBufferResizeCallback(SDL_Window *window, int width, int height);
@@ -37,13 +41,14 @@ class GlorpWindow {
         int m_windowedHeight;
         int m_windowedWidth;
         int m_windowedPositionX;
-        int m_windowedPositionY;
+    int m_windowedPositionY;
         
         bool m_shouldClose = false;
 
         bool m_frameBufferResized = false;
 
-        SDL_Gamepad* m_gamepad;
+        SDL_Gamepad* m_gamepad = NULL;
+        bool m_gamepadSupportsGyro = false;
         bool fullscreen = false;
 
         const std::string m_windowName;

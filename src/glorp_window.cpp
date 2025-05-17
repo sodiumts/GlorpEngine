@@ -19,6 +19,34 @@ GlorpWindow::~GlorpWindow()
     SDL_Quit();
 }
 
+void GlorpWindow::setupGamepad(SDL_GamepadDeviceEvent event) {
+    if (m_gamepad != NULL)
+        return;
+
+    auto gamepadID = event.which;
+    m_gamepad = SDL_OpenGamepad(gamepadID);
+    if (m_gamepad == NULL)
+        return;
+    std::cout << "Gamepad connected" << std::endl;
+    
+    if(!SDL_SetGamepadSensorEnabled(m_gamepad, SDL_SENSOR_GYRO, true)) {
+        std::cout << "Gamepad does not support gyro" << std::endl;
+        m_gamepadSupportsGyro = false;
+        return;
+    }
+    m_gamepadSupportsGyro = true; 
+}
+
+void GlorpWindow::destroyGamepad(SDL_GamepadDeviceEvent event) {
+    if(SDL_GetGamepadID(m_gamepad) != event.which)
+        return;
+
+    SDL_CloseGamepad(m_gamepad);
+    std::cout << "Gamepad disconnected" << std::endl;
+    m_gamepad = NULL;
+    m_gamepadSupportsGyro = false;
+}
+
 void GlorpWindow::InitWindow() {
     if(!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD | SDL_INIT_SENSOR)) {
         throw std::runtime_error("Failed to init SDL");
@@ -28,21 +56,7 @@ void GlorpWindow::InitWindow() {
 
     SDL_WindowFlags wFlags = SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY;
     m_window = SDL_CreateWindow("Glorp Engine", m_width, m_height, wFlags);
-    std::cout << "Finding gamepads" << std::endl;
-    while(!SDL_HasGamepad()) {
-    }
-    int gamepadCount = 0;
-    SDL_JoystickID * gamepads;
-    gamepads = SDL_GetGamepads(&gamepadCount);
-    std::cout << "Found gamepads: " << gamepadCount << std::endl;
     
-    if((m_gamepad = SDL_OpenGamepad(gamepads[0])) == NULL) {
-        throw std::runtime_error("Failed to open gamepad");
-    }
-    
-    if(!SDL_SetGamepadSensorEnabled(m_gamepad, SDL_SENSOR_GYRO, true)) {
-        throw std::runtime_error("Failed to enable gyro sensor");
-    }
     SDL_SetWindowRelativeMouseMode(m_window, true);
 }
 

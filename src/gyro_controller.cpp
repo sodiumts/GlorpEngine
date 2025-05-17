@@ -1,14 +1,20 @@
 #include "gyro_controller.hpp"
 #include "glorp_game_object.hpp"
+#include <glm/fwd.hpp>
 
 namespace Glorp {
 
 GyroController::GyroController(GlorpWindow &window): m_window(window) {};
 
 void GyroController::handleGyroMovement(float dt, GlorpGameObject &gameObject) {
+    SDL_UpdateGamepads();
     float gamepadValues[3];
     if (!SDL_GetGamepadSensorData(m_window.getGamepad(), SDL_SENSOR_GYRO, gamepadValues, 3)) {
         throw std::runtime_error("Failed to get sensor data");
+    }
+    // Reset on misc button press
+    if(SDL_GetGamepadButton(m_window.getGamepad(), SDL_GAMEPAD_BUTTON_MISC1)) {
+        gameObject.transform.rotation = glm::quat{};
     }
 
     glm::vec3 angularVelocity(
