@@ -127,9 +127,9 @@ elseif(APPLE)
             COMMAND ${CMAKE_COMMAND} -E make_directory
                 "$<TARGET_BUNDLE_DIR:${PROJECT_NAME}>/Contents/Resources/vulkan/icd.d/"
 
-            COMMAND ${CMAKE_COMMAND} -E copy
-                "${GLFW_MAC_LOCATION}/lib/libglfw.3.dylib"
-                "$<TARGET_BUNDLE_DIR:${PROJECT_NAME}>/Contents/Frameworks/"
+                #COMMAND ${CMAKE_COMMAND} -E copy
+                #    "${GLFW_MAC_LOCATION}/lib/libglfw.3.dylib"
+                #    "$<TARGET_BUNDLE_DIR:${PROJECT_NAME}>/Contents/Frameworks/"
 
             COMMAND ${CMAKE_COMMAND} -E copy
                 "${VULKAN_ICD}"
@@ -146,13 +146,12 @@ elseif(APPLE)
             COMMAND install_name_tool -add_rpath @executable_path/../Frameworks
                 "$<TARGET_BUNDLE_DIR:${PROJECT_NAME}>/Contents/MacOS/${PROJECT_NAME}"
 
-            COMMAND install_name_tool -change ${GLFW_MAC_LOCATION}/lib/libglfw.3.dylib @rpath/libglfw.3.dylib
-                "$<TARGET_BUNDLE_DIR:${PROJECT_NAME}>/Contents/MacOS/${PROJECT_NAME}"
+                #COMMAND install_name_tool -change ${GLFW_MAC_LOCATION}/lib/libglfw.3.dylib @rpath/libglfw.3.dylib
+                #"$<TARGET_BUNDLE_DIR:${PROJECT_NAME}>/Contents/MacOS/${PROJECT_NAME}"
 
             COMMAND install_name_tool -change ${VULKAN_MAC_LOCATION}/macos/lib/libvulkan.1.dylib @rpath/libvulkan.1.dylib
                 "$<TARGET_BUNDLE_DIR:${PROJECT_NAME}>/Contents/MacOS/${PROJECT_NAME}"
         )
-        message(STATUS "PATH OF libglfw.3.dylib: ${GLFW_MAC_LOCATION}/lib/libglfw.3.dylib")
 
         set(DEST_DIR "${CMAKE_BINARY_DIR}/${CMAKE_PROJECT_NAME}.app/Contents/Resources/models")
         set(SOURCE_DIR "${PROJECT_SOURCE_DIR}/models")
