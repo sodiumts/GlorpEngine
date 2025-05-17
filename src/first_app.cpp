@@ -31,9 +31,6 @@
 #include <glm/gtc/constants.hpp>
 #include <iostream>
 
-#ifndef MODELS_DIR
-#define MODELS_DIR
-#endif
 
 namespace Glorp {
 
@@ -71,13 +68,14 @@ void FirstApp::run() {
         .addBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
         .build();
 
+    const char* base = SDL_GetBasePath();
     GlorpCubeMap cubemap = GlorpCubeMap(m_glorpDevice, {
-        std::string(RESOURCE_LOCATIONS) + "cubemap/skybox/right.jpg",
-        std::string(RESOURCE_LOCATIONS) + "cubemap/skybox/left.jpg",
-        std::string(RESOURCE_LOCATIONS) + "cubemap/skybox/bottom.jpg",
-        std::string(RESOURCE_LOCATIONS) + "cubemap/skybox/top.jpg",
-        std::string(RESOURCE_LOCATIONS) + "cubemap/skybox/front.jpg",
-        std::string(RESOURCE_LOCATIONS) + "cubemap/skybox/back.jpg",
+        std::string(base) + "cubemap/skybox/right.jpg",
+        std::string(base) + "cubemap/skybox/left.jpg",
+        std::string(base) + "cubemap/skybox/bottom.jpg",
+        std::string(base) + "cubemap/skybox/top.jpg",
+        std::string(base) + "cubemap/skybox/front.jpg",
+        std::string(base) + "cubemap/skybox/back.jpg",
     });
 
     std::vector<VkDescriptorSet> globalDescriptorSets(GlorpSwapChain::MAX_FRAMES_IN_FLIGHT);
@@ -146,7 +144,7 @@ void FirstApp::run() {
   //  SimpleRenderSystem simpleRenderSystem{m_glorpDevice, m_glorpRenderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout(), textureSetLayout->getDescriptorSetLayout()};
     PS1RenderSystem ps1RenderSystem{m_glorpDevice, m_glorpRenderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout(), textureSetLayout->getDescriptorSetLayout()};
  //   PointLightSystem pointLightSystem{m_glorpDevice, m_glorpRenderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout()};
-    CubeMapRenderSystem cubemapRenderSystem{m_glorpDevice, m_glorpRenderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout()};
+    //CubeMapRenderSystem cubemapRenderSystem{m_glorpDevice, m_glorpRenderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout()};
     GlorpImgui glorpImgui{m_glorpDevice, m_glorpRenderer.getSwapChainRenderPass(), m_glorpWindow};
 
     GlorpCamera camera{};
@@ -255,7 +253,7 @@ void FirstApp::run() {
             // render
             m_glorpRenderer.beginSwapChainRenderPass(commandBuffer);
 
-            cubemapRenderSystem.renderCubemap(frameInfo);
+            //cubemapRenderSystem.renderCubemap(frameInfo);
             ps1RenderSystem.renderToSwapchain(frameInfo);
             //simpleRenderSystem.renderGameObjects(frameInfo);
             //pointLightSystem.render(frameInfo);

@@ -1,4 +1,5 @@
 #include "ps1_render_system.hpp"
+#include "SDL3/SDL_filesystem.h"
 #include "glorp_descriptors.hpp"
 
 #include <glm/common.hpp>
@@ -107,10 +108,11 @@ void PS1RenderSystem::createPipeline(VkRenderPass renderPass) {
     pipelineConfig.multisampleInfo.sampleShadingEnable = VK_FALSE;
     pipelineConfig.renderPass = m_offscreenRenderPass;
     pipelineConfig.pipelineLayout = m_pipelineLayout;
+    const char* base = SDL_GetBasePath();
     m_glorpPipeline = std::make_unique<GlorpPipeline>(
         m_glorpDevice,
-        std::string(RESOURCE_LOCATIONS) + "shaders/ps1_shader.vert.spv",
-        std::string(RESOURCE_LOCATIONS) + "shaders/ps1_shader.frag.spv",
+        std::string(base) + "shaders/ps1_shader.vert.spv",
+        std::string(base) + "shaders/ps1_shader.frag.spv",
         pipelineConfig
     );
 
@@ -122,11 +124,11 @@ void PS1RenderSystem::createQuadPipeline(VkRenderPass renderPass) {
     GlorpPipeline::defaultPipelineConfigInfo(pipelineConfig);
     pipelineConfig.renderPass = renderPass;
     pipelineConfig.pipelineLayout = m_quadPipelineLayout;
-    
+    const char* base = SDL_GetBasePath(); 
     m_quadPipeline = std::make_unique<GlorpPipeline>(
         m_glorpDevice,
-        "shaders/quad.vert.spv",
-        "shaders/quad.frag.spv",
+        std::string(base) + "shaders/quad.vert.spv",
+        std::string(base) + "shaders/quad.frag.spv",
         pipelineConfig
     );
 }

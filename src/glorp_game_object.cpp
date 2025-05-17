@@ -1,8 +1,10 @@
 #include "glorp_game_object.hpp"
+#include "SDL3/SDL_stdinc.h"
 #include <glm/fwd.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/matrix.hpp>
 #include <memory>
+#include <stdexcept>
 
 #define TINYGLTF_IMPLEMENTATION
 #define STB_IMAGE_IMPLEMENTATION
@@ -36,17 +38,20 @@ GlorpGameObject GlorpGameObject::createGameObjectFromAscii(GlorpDevice &device, 
 }
 
 void GlorpGameObject::loadBinaryGLTF(tinygltf::Model &model, const std::string &filepath) {
-    std::string fullPath = RESOURCE_LOCATIONS + filepath;
+    const char* base = SDL_GetBasePath();
+    std::string fullPath = std::string(base) + filepath;
     tinygltf::TinyGLTF loader;
     std::string err;
     std::string warn;
     auto start = std::chrono::high_resolution_clock::now();
-    bool res = loader.LoadBinaryFromFile(&model, &err, &warn, fullPath);
+    bool res = loader.LoadBinaryFromFile(&model, &err, &warn, fullPath.c_str());
     if(!warn.empty()) {
-        std::cout << "Warning from loading gltf file: " << warn << std::endl;
+        std::string errm = "Failed to load file in dir " + fullPath; 
+        throw std::runtime_error(errm);
     }
     if(!err.empty()) {
-        std::cout << "Error loading gltf file: " << err << std::endl;
+        std::string errm = "Failed to load file in dir " + fullPath; 
+        throw std::runtime_error(errm);
     }
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> duration = end - start;

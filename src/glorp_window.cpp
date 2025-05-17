@@ -54,7 +54,7 @@ void GlorpWindow::InitWindow() {
     
 
 
-    SDL_WindowFlags wFlags = SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY;
+    SDL_WindowFlags wFlags = SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE;
     m_window = SDL_CreateWindow("Glorp Engine", m_width, m_height, wFlags);
     
     SDL_SetWindowRelativeMouseMode(m_window, true);

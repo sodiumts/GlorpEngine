@@ -3,6 +3,11 @@ cmake_minimum_required(VERSION 3.29.0)
 project(GlorpEngine VERSION 0.2.0)
 set(CMAKE_CXX_STANDARD 23)
 
+if (APPLE)
+set(CMAKE_SKIP_BUILD_RPATH TRUE)
+set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
+endif()
+
 include(./.env.cmake OPTIONAL RESULT_VARIABLE LOCAL_ENV)
 if (NOT LOCAL_ENV)
     message(STATUS "Local .env.cmake not found, using default values")
@@ -70,12 +75,12 @@ if (WIN32)
         ${PROJECT_SOURCE_DIR}/external/imgui
         ${PROJECT_SOURCE_DIR}/external/imgui/backends
         ${Vulkan_INCLUDE_DIRS}
-        ${GLFW_INCLUDE_DIRS}
+        #${GLFW_INCLUDE_DIRS}
     )
 
     target_link_directories(${PROJECT_NAME} PUBLIC
         ${Vulkan_LIBRARIES}
-        ${GLFW_LIB}
+        #${GLFW_LIB}
     )
 
     target_link_libraries(${PROJECT_NAME} SDL3::SDL3 vulkan-1)
@@ -90,11 +95,11 @@ elseif(APPLE)
                message(FATAL_ERROR "VULKAN_MAC_LOCATION not set in .env.cmake")
            endif()
 
-           if (NOT GLFW_MAC_LOCATION)
-               message(FATAL_ERROR "GLFW_MAC_LOCATION not set in .env.cmake")
-           endif()
+           # if (NOT GLFW_MAC_LOCATION)
+           #     message(FATAL_ERROR "GLFW_MAC_LOCATION not set in .env.cmake")
+           # endif()
 
-        set(RESOURCE_LOCATIONS "Resources/")
+        set(RESOURCE_LOCATIONS "@executable_path/../Resources/")
         set(IMAGE_FILE ${PROJECT_SOURCE_DIR}/assets/glorp.icns)
         set(INFO_PLIST ${PROJECT_SOURCE_DIR}/assets/Info.plist)
         set(VULKAN_ICD ${PROJECT_SOURCE_DIR}/assets/MoltenVK_icd.json)
@@ -127,6 +132,10 @@ elseif(APPLE)
             COMMAND ${CMAKE_COMMAND} -E make_directory
                 "$<TARGET_BUNDLE_DIR:${PROJECT_NAME}>/Contents/Resources/vulkan/icd.d/"
 
+            COMMAND ${CMAKE_COMMAND} -E copy 
+                "${PROJECT_SOURCE_DIR}/build/external/SDL/libSDL3.0.dylib"
+                "$<TARGET_BUNDLE_DIR:${PROJECT_NAME}>/Contents/Frameworks/"
+
                 #COMMAND ${CMAKE_COMMAND} -E copy
                 #    "${GLFW_MAC_LOCATION}/lib/libglfw.3.dylib"
                 #    "$<TARGET_BUNDLE_DIR:${PROJECT_NAME}>/Contents/Frameworks/"
@@ -148,6 +157,8 @@ elseif(APPLE)
 
                 #COMMAND install_name_tool -change ${GLFW_MAC_LOCATION}/lib/libglfw.3.dylib @rpath/libglfw.3.dylib
                 #"$<TARGET_BUNDLE_DIR:${PROJECT_NAME}>/Contents/MacOS/${PROJECT_NAME}"
+                COMMAND install_name_tool -change ${PROJECT_SOURCE_DIR}/build/external/SDL/libSDL3.0.dylib @rpath/libSDL3.0.dylib
+                "$<TARGET_BUNDLE_DIR:${PROJECT_NAME}>/Contents/MacOS/${PROJECT_NAME}"
 
             COMMAND install_name_tool -change ${VULKAN_MAC_LOCATION}/macos/lib/libvulkan.1.dylib @rpath/libvulkan.1.dylib
                 "$<TARGET_BUNDLE_DIR:${PROJECT_NAME}>/Contents/MacOS/${PROJECT_NAME}"

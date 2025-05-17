@@ -10,9 +10,6 @@
 #include <memory>
 #include <atomic>
 
-#ifndef RESOURCE_LOCATIONS
-#define RESOURCE_LOCATIONS ""
-#endif
 
 namespace Glorp {
 class FirstApp {

@@ -12,7 +12,7 @@ usage() {
 while getopts "r" opt; do
     case ${opt} in
         r)
-            BUILD_TYPE="Release"
+            BUILD_TYPE="Debug"
             BUILD_APP_BUNDLE="ON"
             ;;
         *)
