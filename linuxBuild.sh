@@ -12,5 +12,5 @@ cmake -S ../ \
   -DSDL_WAYLAND=ON \
   -DSDL_X11=ON -B .
 make -j && make Shaders
-
-cd .. && SDL_VIDEODRIVER=wayland ./build/GlorpEngine
+cd ..
+mv build/GlorpEngine GlorpEngine
