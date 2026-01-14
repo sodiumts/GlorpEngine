@@ -4,7 +4,6 @@
 #include <array>
 #include <cstdlib>
 #include <cstring>
-#include <iostream>
 #include <limits>
 #include <stdexcept>
 #include <vulkan/vulkan_core.h>
@@ -58,9 +57,12 @@ GlorpSwapChain::~GlorpSwapChain() {
 
   vkDestroyRenderPass(m_device.device(), m_renderPass, nullptr);
 
-  // cleanup synchronization objects
+
+  for (size_t i = 0; i < m_renderFinishedSemaphores.size(); i++) {
+    vkDestroySemaphore(m_device.device(), m_renderFinishedSemaphores[i], nullptr);  
+  }
+
   for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-    vkDestroySemaphore(m_device.device(), m_renderFinishedSemaphores[i], nullptr);
     vkDestroySemaphore(m_device.device(), m_imageAvailableSemaphores[i], nullptr);
     vkDestroyFence(m_device.device(), m_inFlightFences[i], nullptr);
   }
@@ -104,7 +106,7 @@ VkResult GlorpSwapChain::submitCommandBuffers(
   submitInfo.commandBufferCount = 1;
   submitInfo.pCommandBuffers = buffers;
 
-  VkSemaphore signalSemaphores[] = {m_renderFinishedSemaphores[m_currentFrame]};
+  VkSemaphore signalSemaphores[] = {m_renderFinishedSemaphores[*imageIndex]};
   submitInfo.signalSemaphoreCount = 1;
   submitInfo.pSignalSemaphores = signalSemaphores;
 
@@ -408,7 +410,7 @@ void GlorpSwapChain::createDepthResources() {
 
 void GlorpSwapChain::createSyncObjects() {
   m_imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
-  m_renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
+  m_renderFinishedSemaphores.resize(imageCount());
   m_inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
   m_imagesInFlight.resize(imageCount(), VK_NULL_HANDLE);
 
@@ -419,13 +421,17 @@ void GlorpSwapChain::createSyncObjects() {
   fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
   fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
+  // frame semaphores and fences
   for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-    if (vkCreateSemaphore(m_device.device(), &semaphoreInfo, nullptr, &m_imageAvailableSemaphores[i]) !=
-            VK_SUCCESS ||
-        vkCreateSemaphore(m_device.device(), &semaphoreInfo, nullptr, &m_renderFinishedSemaphores[i]) !=
-            VK_SUCCESS ||
-        vkCreateFence(m_device.device(), &fenceInfo, nullptr, &m_inFlightFences[i]) != VK_SUCCESS) {
-      throw std::runtime_error("failed to create synchronization objects for a frame!");
+    if (vkCreateSemaphore(m_device.device(), &semaphoreInfo, nullptr, &m_imageAvailableSemaphores[i]) != VK_SUCCESS ||
+      vkCreateFence(m_device.device(), &fenceInfo, nullptr, &m_inFlightFences[i]) != VK_SUCCESS) {
+      throw std::runtime_error("failed to create frame sync objects!");
+    }
+  }
+  // swp chain image semaphores
+  for (size_t i = 0; i < imageCount(); i++) {
+    if (vkCreateSemaphore(m_device.device(), &semaphoreInfo, nullptr, &m_renderFinishedSemaphores[i]) != VK_SUCCESS) {
+      throw std::runtime_error("failed to create image sync objects!");
     }
   }
 }
